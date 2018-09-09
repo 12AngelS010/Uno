@@ -20,7 +20,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+//app.use('/', indexRouter);
+// initial get function
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname + '/index.html'))
+});
 app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
@@ -40,3 +44,9 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+
+//start server on the specified port
+app.listen(6001, '0.0.0.0', function() {
+    //print message
+    console.log("server starting")
+});
