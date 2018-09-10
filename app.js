@@ -51,3 +51,10 @@ app.listen(port, '0.0.0.0', function() {
     //print message
     console.log("server starting on port", port)
 });
+
+/*
+ibmcloud api https://api.ng.bluemix.net
+ibmcloud login
+ibmcloud target -r "eu-gb" -o 12AngelS010@mysandstorm.org -s dev
+ibmcloud app push UnoCardGame
+ */
