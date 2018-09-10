@@ -2,15 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Uno Card Game</title>
-    <script
-            src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-            crossorigin="anonymous">
-    </script>
+    <title>Uno</title>
+    <link rel="icon" href="images/favicon.png">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <img id="picture" src="images/blue_1.png">
+    <!--<img id="picture" src="images/blue_1.png">-->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div class="row">
+                    Bill
+                </div>
+                <div class="row">
+                    Cards
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                Mike
+            </div>
+            <div class="col-md-2">
+                Cards
+            </div>
+            <div class="col-md-4"></div>
+            <div class="col-md-2">
+                Cards
+            </div>
+            <div class="col-md-2">
+                Lisa
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div class="row">
+                    Cards
+                </div>
+                <div class="row">
+                    You
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
     <script>
         $(document).ready(function(){
             function getRandomArbitrary(min, max) {
