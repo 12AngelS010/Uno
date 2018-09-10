@@ -2,9 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Uno Card Game</title>
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous">
+    </script>
 </head>
 <body>
-    <img src="images/blue_5.png">
+    <img id="picture" src="images/blue_1.png">
+    <script>
+        $(document).ready(function(){
+            function getRandomArbitrary(min, max) {
+                return parseInt(Math.random() * (max - min) + min);
+            }
+
+            var number = getRandomArbitrary(1,9);
+            //document.getElementById("picture").src = ;
+            $("#picture").attr('src','images/green_' + number + '.png')
+        });
+    </script>
 </body>
 </html>
