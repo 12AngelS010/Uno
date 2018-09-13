@@ -13,6 +13,12 @@
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
+<style>
+    body {
+        background-color: lightgreen;
+    }
+</style>
+
 <body>
     <!--<img id="picture" src="images/blue_1.png">-->
     <div class="container">
@@ -50,13 +56,28 @@
                     Cards
                 </div>
                 <div class="row">
-                    You
+                    your name
                 </div>
             </div>
             <div class="col-md-4"></div>
         </div>
     </div>
     <script>
+/*
+        var i;
+        for (i = 0; i < 10; i++) {
+            ListOfGreen += green_[i] + "<br>";
+        }
+        for (i = 0; i < 10; i++) {
+            ListOfred += red_[i] + "<br>";
+        }
+        for (i = 0; i < 10; i++) {
+            ListOfblue += blue_[i] + "<br>";
+        }
+        for (i = 0; i < 10; i++) {
+            ListOfyellow += yellow_[i] + "<br>";
+        }
+
         $(document).ready(function(){
             function getRandomArbitrary(min, max) {
                 return parseInt(Math.random() * (max - min) + min);
@@ -66,7 +87,7 @@
             //document.getElementById("picture").src = ;
             $("#picture").attr('src','images/green_' + number + '.png')
         });
-        /*
+
         $(imageslist).ready(function(){
             var ListOfBlueImages = ['blue_0.png','blue_1.png','blue_2.png','blue_3.png','blue_4.png','blue_5.png','blue_6.png','blue_7.png','blue_8.png','blue_9.png','blue_reverse.png','blue_skip.png','blue_+2.png']
             var ListOfGreenImages = ['green_0.png','green_1.png','green_2.png','green_3.png','green_4.png','green_5.png','green_6.png','green_7.png','green_8.png','green_9.png','green_reverse.png','blue_skip.png','blue_+2.png']
