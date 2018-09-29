@@ -71,6 +71,7 @@
             var colours = ["b", "g", "r", "y"];
             var special = ["s","r","+"];
 
+            // insert all coloured cards
             colours.forEach(function (colour) {
                 for (var i = 0; i < 10; i++) {
                     deck.push(colour + i);
@@ -80,6 +81,13 @@
                     deck.push(colour + character);
                 });
             });
+
+            // insert black cards
+            for (var i = 0; i < 4; i++) {
+                deck.push("*d");
+                deck.push("*w");
+            }
+
             return deck;
         }
 
@@ -98,6 +106,9 @@
                 case "y":
                     image = image +"yellow";
                     break;
+                case "*":
+                    image = image +"black";
+                    break;
                 default:
                     break;
             }
@@ -111,6 +122,12 @@
                     break;
                 case "r":
                     image = image + "_reverse";
+                    break;
+                case "d":
+                    image = image + "_+4";
+                    break;
+                case "w":
+                    image = image + "_wildcard";
                     break;
                 default:
                     image = image + "_" + card[1];
