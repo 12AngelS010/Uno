@@ -15,52 +15,41 @@
 </head>
 <style>
     body {
-        background-color: lightgreen;
+        background-color: darkgreen;
+    }
+    #top-player {
+        position: absolute;
+        top: 2px;
+        left: 30%;
+        height: 100px;
+    }
+    #right-player {
+        position: absolute;
+        right: 2px;
+        height: 100px;
+        top: 40%;
+    }
+    #left-player{
+        position: absolute;
+        height: 100px;
+        top:40%;
+        left: 2px;
+    }
+    #bottom-player {
+        left: 30%;
+        position: absolute;
+        height: 100px;
+        bottom: 10px;
     }
 </style>
 <body>
     <div id="cards"></div>
     <div id= "shuffled"></div>
     <div class="container">
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <div class="row">
-                    Bill
-                </div>
-                <div class="row">
-                    Cards
-                </div>
-            </div>
-            <div class="col-md-4"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-2">
-                Mike
-            </div>
-            <div class="col-md-2">
-                Cards
-            </div>
-            <div class="col-md-4"></div>
-            <div class="col-md-2">
-                Cards
-            </div>
-            <div class="col-md-2">
-                Lisa
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <div class="row">
-                    Cards
-                </div>
-                <div class="row">
-                    your name
-                </div>
-            </div>
-            <div class="col-md-4"></div>
-        </div>
+        <div id="top-player"></div>
+        <div id="left-player"></div>
+        <div id="right-player"></div>
+        <div id="bottom-player"></div>
     </div>
 	
     <script>
@@ -78,6 +67,8 @@
                 }
 
                 special.forEach(function (character) {
+                    // There are two special cards per colour
+                    deck.push(colour + character);
                     deck.push(colour + character);
                 });
             });
@@ -153,20 +144,46 @@
             return a;
         }
 
-        function printDeck(deck, div) {
-            deck.forEach(function (element, index, array) {
+        function printCards(cards, div) {
+            cards.forEach(function (element, index, array) {
                 var image = cardToImage(element);
                 var html = '<img src="' + image + '">';
                 $(div).append(html);
             });
         }
 
+        function dealCards(deck, players){
+            var number = 7;
+
+            for(var i = 0; i < number; i++){
+                players.forEach(function(player){
+                   var card = deck.shift();
+                   player.hand.push(card);
+                });
+            }
+        }
+
         $(document).ready(function(){
             var deck = createDeck();
-            printDeck (deck, "#cards");
+            var players = [];
+
+            players.push({hand:[], name:"Sam"});
+            players.push({hand:[], name:"James"});
+            players.push({hand:[], name:"Emily"});
+            players.push({hand:[], name:"Barney"});
+
+            deck = shuffle(deck);
+            dealCards(deck, players);
+
+            printCards(players[0].hand, "#top-player");
+            printCards(players[1].hand, "#left-player");
+            printCards(players[2].hand, "#right-player");
+            printCards(players[3].hand, "#bottom-player");
+            //printCards (deck, "#cards");
+
             deck = shuffle(deck);
 
-            printDeck(deck,"#shuffled");
+            //printCards(deck,"#shuffled");
 
         });
 
