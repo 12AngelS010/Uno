@@ -41,6 +41,11 @@
         height: 100px;
         bottom: 10px;
     }
+    #deal-button {
+        left: 50%;
+        position: absolute;
+        top: 50%;
+    }
 </style>
 <body>
     <div id="cards"></div>
@@ -50,6 +55,9 @@
         <div id="left-player"></div>
         <div id="right-player"></div>
         <div id="bottom-player"></div>
+        <div id="deal-button">
+            <button type="button">Deal</button>
+        </div>
     </div>
 	
     <script>
@@ -173,12 +181,17 @@
             players.push({hand:[], name:"Barney"});
 
             deck = shuffle(deck);
-            dealCards(deck, players);
 
-            printCards(players[0].hand, "#top-player");
-            printCards(players[1].hand, "#left-player");
-            printCards(players[2].hand, "#right-player");
-            printCards(players[3].hand, "#bottom-player");
+            $("#deal-button").click(function (){
+                dealCards(deck, players);
+
+                printCards(players[0].hand, "#top-player");
+                printCards(players[1].hand, "#left-player");
+                printCards(players[2].hand, "#right-player");
+                printCards(players[3].hand, "#bottom-player");
+                $("#deal-button").hide();
+            });
+
             //printCards (deck, "#cards");
 
             deck = shuffle(deck);
