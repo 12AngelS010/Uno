@@ -33,13 +33,21 @@
 
     #right-player {
         position: absolute;
-        right: 2px;
+        right: 100px;
         height: 100px;
         top: 40%;
     }
 
     #bottom-player {
         left: 30%;
+        position: absolute;
+        height: 100px;
+        bottom: 10px;
+    }
+
+    #deck {
+        left: 40%;
+        top: 40%;
         position: absolute;
         height: 100px;
         bottom: 10px;
@@ -101,6 +109,11 @@
     </div>
 	
     <script>
+        const spaced = 1;
+        const stacked = 2;
+        const face_up = 100;
+        const face_down = 100;
+
 //create deck of cards
         function createDeck() {
             var deck = [];
@@ -129,7 +142,11 @@
             return deck;
         }
 
-        function cardToImage(card){
+        function cardToImage(card, aspect){
+            if( aspect == face_down) {
+                return "images/back.png";
+            }
+
             var image = "images/";
             switch(card[0]){
                 case "b":
@@ -191,10 +208,34 @@
             return a;
         }
 
-        function printCards(cards, div) {
-            cards.forEach(function (element, index, array) {
-                var image = cardToImage(element);
-                var html = '<img src="' + image + '">';
+        function printCards(cards, div, alignment, aspect) {
+            var left = 0;
+            var top = 0;
+            var zindex = 0;
+
+            cards.forEach(function (element) {
+                var image = cardToImage(element, aspect);
+                var html = '<img src="' + image +
+                    '" style="z-index: ' + zindex + ';' +
+                    'left: ' + left + 'px;' +
+                    'top: ' + top + 'px;' +
+                    'position:absolute">';
+                switch( alignment ){
+                    case spaced:
+                        left += 30;
+                        zindex++;
+                        break;
+                    case stacked:
+                        left += 2;
+                        left = Math.min(left, 10);
+                        top += 2;
+                        top = Math.min(top, 10);
+                        zindex++;
+                        break;
+                    default:
+                        break;
+                }
+
                 $(div).append(html);
             });
         }
@@ -235,8 +276,9 @@
 
                 printCards(players[0].hand, "#top-player");
                 printCards(players[1].hand, "#left-player");
+                printCards(deck, "#deck", stacked, face_down);
                 printCards(players[2].hand, "#right-player");
-                printCards(players[3].hand, "#bottom-player");
+                printCards(players[3].hand, "#bottom-player", spaced);
                 $("#deal-button").hide();
             });
 
