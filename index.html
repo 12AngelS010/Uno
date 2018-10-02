@@ -42,10 +42,36 @@
         bottom: 10px;
     }
     #deal-button {
-        left: 50%;
+        left: 40%;
         position: absolute;
-        top: 50%;
+        top: 40%;
     }
+    .deal-button {
+        background-color: white;
+        border: none;
+        color: black;
+        padding: 32px 64px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 16px 8px;
+        -webkit-transition-duration: 0.4s; /* Safari */
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    .button1 {
+        background-color: black;
+        color: white;
+        border: 4px solid black;
+    }
+
+    .button1:hover {
+        background-color: white;
+        color: black;
+    }
+
 </style>
 <body>
     <div id="cards"></div>
@@ -56,7 +82,7 @@
         <div id="right-player"></div>
         <div id="bottom-player"></div>
         <div id="deal-button">
-            <button type="button">Deal</button>
+            <button class="deal-button button1">Deal</button>
         </div>
     </div>
 	
@@ -181,6 +207,8 @@
             players.push({hand:[], name:"Barney"});
 
             deck = shuffle(deck);
+
+
 
             $("#deal-button").click(function (){
                 dealCards(deck, players);
