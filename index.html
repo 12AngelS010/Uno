@@ -26,7 +26,7 @@
     #left-player{
         position: absolute;
         top:50%;
-        left: 0%;
+        left: 5%;
     }
 
     #right-player {
@@ -37,7 +37,7 @@
 
     #bottom-player {
         position: absolute;
-        top: 90%;
+        top: 80%;
         left: 50%;
     }
 
@@ -205,10 +205,10 @@
             });
         }
 
-        function moveCards(cards, delay) {
+        function moveCards(cards, delay, gap) {
             cards.forEach(function(card){
                 $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px', "z-index": card.zindex}, "slow");
-                delay += 10;
+                delay += gap;
             });
         }
 
@@ -229,7 +229,7 @@
             players.push({hand:[], name:"Sam", div: "top-player", offsetTop: 0, offsetLeft: 20});
             players.push({hand:[], name:"James", div: "left-player", offsetTop: 20, offsetLeft: 0});
             players.push({hand:[], name:"Emily", div: "right-player", offsetTop: 20, offsetLeft: 0});
-            players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 20});
+            players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 30});
 
             printCards(deck, "#cards");
 
@@ -238,7 +238,7 @@
             var div = $( "#deck");
             var position = div.position();
 
-            var offset = 1;
+            var offset = 0;
             var zindex = 0;
 
             deck.slice().reverse().forEach(function(card){
@@ -246,10 +246,10 @@
                 card.top = position.top - offset;
                 card.zindex = zindex;
                 zindex++;
-                offset++;
-                offset = Math.min(5,offset);
+                offset+= 2;
+                offset = Math.min(10, offset);
             });
-            moveCards(deck, 1000);
+            moveCards(deck, 0, 0);
 
             $("#deal-button").click(function(){
                 dealCards(deck,players);
@@ -261,16 +261,19 @@
 
                     var offsetLeft = 0;
                     var offsetTop = 0;
+                    var zindex = 0;
 
                     player.hand.forEach(function(card){
                         card.left = position.left + offsetLeft;
                         card.top = position.top + offsetTop;
+                        card.zindex = zindex;
 
+                        zindex++;
                         offsetLeft += player.offsetLeft;
                         offsetTop += player.offsetTop;
                     });
 
-                    moveCards(player.hand, 0);
+                    moveCards(player.hand, 0, 60);
                 });
 
                 $("#deal-button").hide();
