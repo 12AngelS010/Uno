@@ -59,13 +59,6 @@
         top: 40%;
     }
 
-    #create-button {
-        left: 10%;
-        position: absolute;
-        top: 10%;
-
-    }
-
     #help-link {
         position: absolute;
         top: 10px;
@@ -81,6 +74,10 @@
         text-decoration: none;
         display: inline-block;
         font-size: 16px;
+    }
+
+    img {
+        position: absolute;
     }
 </style>
 <body>
@@ -101,24 +98,15 @@
         <div id="deal-button">
             <button class="button">Deal</button>
         </div>
-        <div id="create-button">
-<!--
-            <button class="create-button button1">Create Game</button>
--->
-        </div>
     </div>
 	
     <script>
-        const spaced = 1;
-        const stacked = 2;
-        const face_up = 100;
-        const face_down = 100;
 
 //create deck of cards
         function createDeck() {
             var deck = [];
             var colours = ["b", "g", "r", "y"];
-            var special = ["s","r","+"];
+            var special = ["s","r","p"];
 
             // insert all coloured cards
             colours.forEach(function (colour) {
@@ -128,24 +116,21 @@
 
                 special.forEach(function (character) {
                     // There are two special cards per colour
-                    deck.push(colour + character);
-                    deck.push(colour + character);
+                    deck.push(colour + character + "0");
+                    deck.push(colour + character + "1");
                 });
             });
 
             // insert black cards
             for (var i = 0; i < 4; i++) {
-                deck.push("*d");
-                deck.push("*w");
+                deck.push("xd" + i);
+                deck.push("xw" + i);
             }
 
             return deck;
         }
 
-        function cardToImage(card, aspect){
-            if( aspect == face_down) {
-                return "images/back.png";
-            }
+        function cardToImage(card){
 
             var image = "images/";
             switch(card[0]){
@@ -161,7 +146,7 @@
                 case "y":
                     image = image +"yellow";
                     break;
-                case "*":
+                case "x":
                     image = image +"black";
                     break;
                 default:
@@ -172,7 +157,7 @@
                 case "s":
                     image = image + "_skip";
                     break;
-                case "+":
+                case "p":
                     image = image + "_+2";
                     break;
                 case "r":
@@ -208,41 +193,28 @@
             return a;
         }
 
-        function printCards(cards, div, alignment, aspect) {
-            var left = 0;
-            var top = 0;
-            var zindex = 0;
+        function printCards(cards, div) {
+            var leftpos = 0;
+            var toppos = 0;
 
             cards.forEach(function (element) {
-                var image = cardToImage(element, aspect);
-                var html = '<img src="' + image +
-                    '" style="z-index: ' + zindex + ';' +
-                    'left: ' + left + 'px;' +
-                    'top: ' + top + 'px;' +
-                    'position:absolute">';
-                switch( alignment ){
-                    case spaced:
-                        left += 30;
-                        zindex++;
-                        break;
-                    case stacked:
-                        left += 2;
-                        left = Math.min(left, 10);
-                        top += 2;
-                        top = Math.min(top, 10);
-                        zindex++;
-                        break;
-                    default:
-                        break;
+                var image = cardToImage(element);
+                var html = '<image id="' + element + '" ' +
+                    'src="' + image + '" ' +
+                    'style="left: ' + leftpos + 'px; top:' + toppos + 'px"' +
+                    '></image>';
+                leftpos += 70;
+                if (leftpos > 700){
+                    toppos += 100; leftpos = 0;
                 }
-
                 $(div).append(html);
             });
         }
 
+
+
         function dealCards(deck, players){
             var number = 7;
-
             for(var i = 0; i < number; i++){
                 players.forEach(function(player){
                    var card = deck.shift();
@@ -262,23 +234,11 @@
 
             deck = shuffle(deck);
 
-
-/*            $("#create-button").click(function(){
-                $("#deal-button").show();
-                $("#create-button").hide();
-            });*/
-
-
             //$("#deal-button").hide();
+            printCards(deck, "#cards");
 
             $("#deal-button").click(function (){
                 dealCards(deck, players);
-
-                printCards(players[0].hand, "#top-player");
-                printCards(players[1].hand, "#left-player");
-                printCards(deck, "#deck", stacked, face_down);
-                printCards(players[2].hand, "#right-player");
-                printCards(players[3].hand, "#bottom-player", spaced);
                 $("#deal-button").hide();
             });
 
