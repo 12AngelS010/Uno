@@ -19,44 +19,38 @@
     }
     #top-player {
         position: absolute;
-        top: 2px;
-        left: 30%;
-        height: 100px;
+        top: 0%;
+        left: 50%;
     }
 
     #left-player{
         position: absolute;
-        height: 100px;
-        top:40%;
-        left: 2px;
+        top:50%;
+        left: 0%;
     }
 
     #right-player {
         position: absolute;
-        right: 100px;
-        height: 100px;
-        top: 40%;
+        top: 50%;
+        left: 90%;
     }
 
     #bottom-player {
-        left: 30%;
         position: absolute;
-        height: 100px;
-        bottom: 10px;
+        top: 90%;
+        left: 50%;
     }
 
     #deck {
-        left: 40%;
-        top: 40%;
         position: absolute;
-        height: 100px;
-        bottom: 10px;
+        top: 40%;
+        left: 40%;
     }
 
     #deal-button {
-        left: 50%;
         position: absolute;
         top: 40%;
+        left: 50%;
     }
 
     #help-link {
@@ -89,12 +83,15 @@
     <div id="cards"></div>
     <div id= "shuffled"></div>
     <div class="container">
-        <div id="top-player"></div>
-        <div id="left-player"></div>
+
+        <div id="top-player">t</div>
+        <div id="left-player">l</div>
+        <div id="right-player">r</div>
+        <div id="bottom-player">b</div>
+
         <div id="deck"></div>
         <div id="discard"></div>
-        <div id="right-player"></div>
-        <div id="bottom-player"></div>
+
         <div id="deal-button">
             <button class="button">Deal</button>
         </div>
@@ -208,8 +205,7 @@
             });
         }
 
-        function moveCards(cards) {
-            var delay = 1000;
+        function moveCards(cards, delay) {
             cards.forEach(function(card){
                 $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px', "z-index": card.zindex}, "slow");
                 delay += 10;
@@ -230,10 +226,10 @@
             var deck = createDeck();
             var players = [];
 
-            players.push({hand:[], name:"Sam", div: "top-player"});
-            players.push({hand:[], name:"James", div: "left-player"});
-            players.push({hand:[], name:"Emily", div: "right-player"});
-            players.push({hand:[], name:"Barney", div: "bottom-player"});
+            players.push({hand:[], name:"Sam", div: "top-player", offsetTop: 0, offsetLeft: 20});
+            players.push({hand:[], name:"James", div: "left-player", offsetTop: 20, offsetLeft: 0});
+            players.push({hand:[], name:"Emily", div: "right-player", offsetTop: 20, offsetLeft: 0});
+            players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 20});
 
             printCards(deck, "#cards");
 
@@ -253,19 +249,30 @@
                 offset++;
                 offset = Math.min(5,offset);
             });
-            moveCards(deck);
+            moveCards(deck, 1000);
 
             $("#deal-button").click(function(){
                 dealCards(deck,players);
+
                 players.forEach(function(player){
+
                     var div = $("#" + player.div);
                     var position = div.position();
+
+                    var offsetLeft = 0;
+                    var offsetTop = 0;
+
                     player.hand.forEach(function(card){
-                        card.left = position.left;
-                        card.top = position.top;
+                        card.left = position.left + offsetLeft;
+                        card.top = position.top + offsetTop;
+
+                        offsetLeft += player.offsetLeft;
+                        offsetTop += player.offsetTop;
                     });
-                    moveCards(player.hand);
+
+                    moveCards(player.hand, 0);
                 });
+
                 $("#deal-button").hide();
             });
 
