@@ -54,7 +54,7 @@
     }
 
     #deal-button {
-        left: 40%;
+        left: 50%;
         position: absolute;
         top: 40%;
     }
@@ -102,35 +102,7 @@
 	
     <script>
 
-//create deck of cards
-        function createDeck() {
-            var deck = [];
-            var colours = ["b", "g", "r", "y"];
-            var special = ["s","r","p"];
-
-            // insert all coloured cards
-            colours.forEach(function (colour) {
-                for (var i = 0; i < 10; i++) {
-                    deck.push(colour + i);
-                }
-
-                special.forEach(function (character) {
-                    // There are two special cards per colour
-                    deck.push(colour + character + "0");
-                    deck.push(colour + character + "1");
-                });
-            });
-
-            // insert black cards
-            for (var i = 0; i < 4; i++) {
-                deck.push("xd" + i);
-                deck.push("xw" + i);
-            }
-
-            return deck;
-        }
-
-        function cardToImage(card){
+        function idToImage(card){
 
             var image = "images/";
             switch(card[0]){
@@ -178,6 +150,38 @@
             return image;
         }
 
+//create deck of cards
+        function createCard (id) {
+            return {id: id, left:0, top:0, zindex: 0, image: idToImage(id)}
+        }
+
+        function createDeck() {
+            var deck = [];
+            var colours = ["b", "g", "r", "y"];
+            var special = ["s","r","p"];
+
+            // insert all coloured cards
+            colours.forEach(function (colour) {
+                for (var i = 0; i < 10; i++) {
+                    deck.push(createCard(colour + i));
+                }
+
+                special.forEach(function (character) {
+                    // There are two special cards per colour
+                    deck.push(createCard(colour + character + "0"));
+                    deck.push(createCard(colour + character + "1"));
+                });
+            });
+
+            // insert black cards
+            for (var i = 0; i < 4; i++) {
+                deck.push(createCard ("xd" + i));
+                deck.push(createCard("xw" + i));
+            }
+
+            return deck;
+        }
+
         /*
          * Shuffles array in place.
          * @param {Array} a items An array containing the items.
@@ -194,24 +198,23 @@
         }
 
         function printCards(cards, div) {
-            var leftpos = 0;
-            var toppos = 0;
-
-            cards.forEach(function (element) {
-                var image = cardToImage(element);
-                var html = '<image id="' + element + '" ' +
+            cards.forEach(function (card) {
+                var image = card.image;
+                var html = '<image id="' + card.id + '" ' +
                     'src="' + image + '" ' +
-                    'style="left: ' + leftpos + 'px; top:' + toppos + 'px"' +
+                    'style="left: ' + card.left + 'px; top:' + card.top + 'px"' +
                     '></image>';
-                leftpos += 70;
-                if (leftpos > 700){
-                    toppos += 100; leftpos = 0;
-                }
                 $(div).append(html);
             });
         }
 
-
+        function moveCards(cards) {
+            var delay = 1000;
+            cards.forEach(function(card){
+                $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px', "z-index": card.zindex}, "slow");
+                delay += 10;
+            });
+        }
 
         function dealCards(deck, players){
             var number = 7;
@@ -227,25 +230,43 @@
             var deck = createDeck();
             var players = [];
 
-            players.push({hand:[], name:"Sam"});
-            players.push({hand:[], name:"James"});
-            players.push({hand:[], name:"Emily"});
-            players.push({hand:[], name:"Barney"});
+            players.push({hand:[], name:"Sam", div: "top-player"});
+            players.push({hand:[], name:"James", div: "left-player"});
+            players.push({hand:[], name:"Emily", div: "right-player"});
+            players.push({hand:[], name:"Barney", div: "bottom-player"});
+
+            printCards(deck, "#cards");
 
             deck = shuffle(deck);
 
-            //$("#deal-button").hide();
-            printCards(deck, "#cards");
+            var div = $( "#deck");
+            var position = div.position();
 
-             var left = 250;
-             var delay = 2000;
-             var zindex = 1;
-            deck.forEach(function(card){
-                $("#" + card).delay(delay).animate({left: left + 'px', top: '400px', "z-index": zindex}, "slow");
-                //$("#" + card).delay(1000).animate({top: '400px'}, "slow");
-                //left += 70;
-                delay += 50;
+            var offset = 1;
+            var zindex = 0;
+
+            deck.slice().reverse().forEach(function(card){
+                card.left = position.left - offset;
+                card.top = position.top - offset;
+                card.zindex = zindex;
                 zindex++;
+                offset++;
+                offset = Math.min(5,offset);
+            });
+            moveCards(deck);
+
+            $("#deal-button").click(function(){
+                dealCards(deck,players);
+                players.forEach(function(player){
+                    var div = $("#" + player.div);
+                    var position = div.position();
+                    player.hand.forEach(function(card){
+                        card.left = position.left;
+                        card.top = position.top;
+                    });
+                    moveCards(player.hand);
+                });
+                $("#deal-button").hide();
             });
 
         });
