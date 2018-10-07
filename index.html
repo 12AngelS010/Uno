@@ -13,14 +13,10 @@
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
-<style>
-    body {
-        background-color: lightgreen;
-    }
-</style>
 <body>
     <div id="cards"></div>
-    <div id= "shuffled"></div>
+    <div id="shuffled"></div>
+
     <div class="container">
         <div class="row">
             <div class="col-md-4"></div>
@@ -56,53 +52,60 @@
                     Cards
                 </div>
                 <div class="row">
-                    your name
+                    You
                 </div>
             </div>
             <div class="col-md-4"></div>
         </div>
     </div>
-	
     <script>
 
-//create deck of cards
-        function createDeck() {
-            var deck = [];
-            var colours = ["b", "g", "r", "y"];
-            var special = ["s","r","+"];
+        // create deck of cards
+        var deck = [];
+        var colours = ["b", "g", "r", "y"];
+        var special = ["s", "r", "+"];
 
-            colours.forEach(function (colour) {
-                for (var i = 0; i < 10; i++) {
-                    deck.push(colour + i);
-                }
+        colours.forEach(function(element, index, array){
+            for(var i = 0; i < 10; i++){
+                deck.push(element + i);
+            }
+        });
 
-                special.forEach(function (character) {
-                    deck.push(colour + character);
-                });
+
+        colours.forEach(function(element, index, array){
+            special.forEach(function(i){
+                deck.push(element + i);
             });
-            return deck;
-        }
+        });
+
+        deck.push("*w");
+        deck.push("*-");
 
         function cardToImage(card){
+
             var image = "images/";
-            switch(card[0]){
+
+            switch(card[0]) {
                 case "b":
-                    image = image +"blue";
+                    image = image + "blue";
                     break;
                 case "g":
-                    image = image +"green";
+                    image = image + "green";
                     break;
                 case "r":
-                    image = image +"red";
+                    image = image + "red";
                     break;
                 case "y":
-                    image = image +"yellow";
+                    image = image + "yellow";
+                    break;
+                case "*":
+                    image = image + "black";
                     break;
                 default:
                     break;
             }
-            //image = image + "_" + card[1] + ".png";
-            switch(card[1]){
+
+            switch(card[1]) {
                 case "s":
                     image = image + "_skip";
                     break;
@@ -112,19 +115,22 @@
                 case "r":
                     image = image + "_reverse";
                     break;
+                case "w":
+                    image = image + "_wildcard";
+                    break;
+                case "-":
+                    image = image + "_+4";
+                    break;
                 default:
                     image = image + "_" + card[1];
                     break;
             }
+
             image = image + ".png";
 
             return image;
         }
 
-        /*
-         * Shuffles array in place.
-         * @param {Array} a items An array containing the items.
-         */
         function shuffle(a) {
             var j, x, i;
             for (i = a.length - 1; i > 0; i--) {
@@ -145,14 +151,11 @@
         }
 
         $(document).ready(function(){
-            var deck = createDeck();
-            printDeck (deck, "#cards");
+            printDeck(deck, "#cards");
             deck = shuffle(deck);
-
-            printDeck(deck,"#shuffled");
+            printDeck(deck, "#shuffled");
 
         });
-
     </script>
 </body>
 </html>
