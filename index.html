@@ -237,16 +237,16 @@
             //$("#deal-button").hide();
             printCards(deck, "#cards");
 
-            $("#deal-button").click(function (){
-                dealCards(deck, players);
-                $("#deal-button").hide();
+             var left = 250;
+             var delay = 2000;
+             var zindex = 1;
+            deck.forEach(function(card){
+                $("#" + card).delay(delay).animate({left: left + 'px', top: '400px', "z-index": zindex}, "slow");
+                //$("#" + card).delay(1000).animate({top: '400px'}, "slow");
+                //left += 70;
+                delay += 50;
+                zindex++;
             });
-
-            //printCards (deck, "#cards");
-
-            deck = shuffle(deck);
-
-            //printCards(deck,"#shuffled");
 
         });
 
