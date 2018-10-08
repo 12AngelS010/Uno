@@ -89,10 +89,10 @@
     <div id= "shuffled"></div>
     <div class="container">
 
-        <div id="top-player">t</div>
-        <div id="left-player">l</div>
-        <div id="right-player">r</div>
-        <div id="bottom-player">b</div>
+        <div id="top-player"></div>
+        <div id="left-player"></div>
+        <div id="right-player"></div>
+        <div id="bottom-player"></div>
 
         <div id="deck"></div>
         <div id="discard"></div>
@@ -209,7 +209,7 @@
         function printCards(cards, div) {
             cards.forEach(function (card) {
                 var image = card.image;
-                var html = '<image id="' + card.id + '" ' +
+                var html = '<image class="card" id="' + card.id + '" ' +
                     'src="' + image + '" ' +
                     'style="left: ' + card.left + 'px; top:' + card.top + 'px"' +
                     '></image>';
@@ -241,6 +241,37 @@
                 });
             }
             return cards;
+        }
+
+        function findCard(cards, id){
+            var ret = null;
+            cards.forEach(function(card){
+                if (card.id == id){
+                    ret = card;
+                }
+            });
+            return ret;
+        }
+
+        function findPlayer(players, div){
+            var ret = null;
+            players.forEach(function(player){
+               if (player.div == div){
+                   ret = player;
+               }
+            });
+            return ret;
+        }
+
+        function removeCard (cards, id){
+            var ret = null;
+            for (var i = cards.length - 1; i >= 0; --i) {
+                if (cards[i].id == id) {
+                    ret = cards[i];
+                    cards.splice(i,1);
+                }
+            }
+            return ret;
         }
 
         $(document).ready(function(){
@@ -311,10 +342,33 @@
                 card.left = position.left;
                 card.top = position.top;
                 card.faceup = true;
+                card.zindex = discard.length;
                 discard.push(card);
                 moveCards(discard, delay*players.length*7, 0);
 
                 $("#deal-button").hide();
+            });
+
+            $(".card").click(function(event){
+                console.log(event.currentTarget.id);
+                var id = event.currentTarget.id;
+
+                var player = findPlayer(players,"bottom-player");
+                var card = findCard(player.hand, id);
+
+                if(card != null){
+                    console.log("found " + id);
+
+                    var card = removeCard(player.hand, id);  //player.hand.shift();
+                    var div = $("#discard");
+                    var position = div.position();
+                    card.left = position.left;
+                    card.top = position.top;
+                    card.faceup = true;
+                    discard.push(card);
+                    moveCards(discard, 0, 0);
+                    moveCards(player.hand, 0, 0);
+                }
             });
 
         });
