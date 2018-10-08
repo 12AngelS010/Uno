@@ -15,7 +15,7 @@
 </head>
 <style>
     body {
-        background-color: lightgreen;
+        background-color: #00a000;
     }
     #top-player {
         position: absolute;
@@ -86,7 +86,6 @@
 </div>
 
     <div id="cards"></div>
-    <div id= "shuffled"></div>
     <div class="container">
 
         <div id="top-player"></div>
@@ -208,8 +207,8 @@
 
         function printCards(cards, div) {
             cards.forEach(function (card) {
-                var image = card.image;
-                var html = '<image class="card" id="' + card.id + '" ' +
+                var image = card.back;
+                var html = '<image style="display:none" class="card" id="' + card.id + '" ' +
                     'src="' + image + '" ' +
                     'style="left: ' + card.left + 'px; top:' + card.top + 'px"' +
                     '></image>';
@@ -217,14 +216,31 @@
             });
         }
 
+        function showCards(cards){
+            cards.forEach(function(card){
+                $("#" + card.id).show();
+            })
+        }
+
+        function hideCards(cards){
+            cards.forEach(function(card){
+                $("#" + card.id).show();
+            })
+        }
+
         function moveCards(cards, delay, gap) {
             cards.forEach(function(card){
-                $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px', "z-index": card.zindex}, "slow");
-                if (card.faceup){
-                    $("#" + card.id).attr('src', card.front);
-                } else {
-                    $("#" + card.id).attr('src', card.back);
-                }
+                $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px'}, "slow", function(){
+                    $("#" + card.id).show();
+                    $("#" + card.id).css("z-index", card.zindex);
+                    var src = card.faceup ? card.front : card.back;
+                    if($("#" + card.id).attr("src") != src) {
+                        $("#" + card.id).fadeOut(function () {
+                            $(this).attr('src', src).fadeIn();
+                        });
+                    };
+                });
+
                 delay += gap;
             });
         }
@@ -274,6 +290,47 @@
             return ret;
         }
 
+        function layoutCardStack(cards, name){
+            var div = $(name);
+            var position = div.position();
+
+            var offset = 0;
+            var zindex = cards.length;
+
+            cards.forEach(function(card){
+                card.left = position.left - offset;
+                card.top = position.top - offset;
+                card.zindex = zindex;
+                zindex--;
+                offset-= 2;
+                offset = Math.max(-10, offset);
+            });
+        }
+
+        function layoutCardHand(player){
+            var div = $("#" + player.div);
+            var position = div.position();
+
+            var offsetLeft = 0;
+            var offsetTop = 0;
+            var zindex = 0;
+            var count = player.hand.length;
+
+            var adjleft = player.offsetLeft*count/2;
+            var adjtop = player.offsetTop*count/2;
+
+            player.hand.forEach(function(card){
+                card.left = position.left + offsetLeft - adjleft;
+                card.top = position.top + offsetTop - adjtop;
+                card.zindex = zindex;
+                card.faceup = player.faceup;
+
+                zindex++;
+                offsetLeft += player.offsetLeft;
+                offsetTop += player.offsetTop;
+            });
+        }
+
         $(document).ready(function(){
             var discard = [];
             var deck = createDeck();
@@ -284,67 +341,33 @@
             players.push({hand:[], name:"Emily", div: "right-player", offsetTop: 15, offsetLeft: 0, faceup: false});
             players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 30, faceup: true});
 
+            // put the cards initially in their own div area
             printCards(deck, "#cards");
 
             deck = shuffle(deck);
-
-            var div = $( "#deck");
-            var position = div.position();
-
-            var offset = 0;
-            var zindex = 0;
-
-            deck.slice().reverse().forEach(function(card){
-                card.left = position.left - offset;
-                card.top = position.top - offset;
-                card.zindex = zindex;
-                zindex++;
-                offset+= 2;
-                offset = Math.min(10, offset);
-            });
+            layoutCardStack( deck, "#deck");
             moveCards(deck, 0, 0);
+            //showCards(deck);
 
             $("#deal-button").click(function(){
                 var cards = dealCards(deck, players);
 
                 players.forEach(function(player){
-
-                    var div = $("#" + player.div);
-                    var position = div.position();
-
-                    var offsetLeft = 0;
-                    var offsetTop = 0;
-                    var zindex = 0;
-                    var count = player.hand.length;
-
-                    var adjleft = player.offsetLeft*count/2;
-                    var adjtop = player.offsetTop*count/2;
-
-                    player.hand.forEach(function(card){
-                        card.left = position.left + offsetLeft - adjleft;
-                        card.top = position.top + offsetTop - adjtop;
-                        card.zindex = zindex;
-                        card.faceup = player.faceup;
-
-                        zindex++;
-                        offsetLeft += player.offsetLeft;
-                        offsetTop += player.offsetTop;
-                    });
-
-                    //moveCards(player.hand, 0, 60);
+                    layoutCardHand(player);
                 });
-                var delay = 200;
-                moveCards(cards, 0, delay);
+
+                var gap = 200;
+                moveCards(cards, 0, gap);
 
                 var card = deck.shift();
-                var div = $("#discard");
-                var position = div.position();
-                card.left = position.left;
-                card.top = position.top;
                 card.faceup = true;
-                card.zindex = discard.length;
                 discard.push(card);
-                moveCards(discard, delay*players.length*7, 0);
+                layoutCardStack(discard, "#discard");
+                var delay = gap*players.length*7;
+                moveCards(discard, delay, 0);
+
+                layoutCardStack(deck, "#deck");
+                moveCards(deck, delay, 0);
 
                 $("#deal-button").hide();
             });
@@ -365,8 +388,12 @@
                     card.left = position.left;
                     card.top = position.top;
                     card.faceup = true;
+                    card.zindex = discard.length + 1;
                     discard.push(card);
+                    // ensure the new card is on the top early
+                    $("#" + card.id).css("z-index", card.zindex);
                     moveCards(discard, 0, 0);
+                    layoutCardHand(player);
                     moveCards(player.hand, 0, 0);
                 }
             });
