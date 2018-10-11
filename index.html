@@ -336,8 +336,8 @@
             var deck = createDeck();
             var players = [];
 
-            players.push({hand:[], name:"Sam", div: "top-player", offsetTop: 0, offsetLeft: 15, faceup: false});
             players.push({hand:[], name:"James", div: "left-player", offsetTop: 15, offsetLeft: 0, faceup: false});
+            players.push({hand:[], name:"Sam", div: "top-player", offsetTop: 0, offsetLeft: 15, faceup: false});
             players.push({hand:[], name:"Emily", div: "right-player", offsetTop: 15, offsetLeft: 0, faceup: false});
             players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 30, faceup: true});
 
@@ -356,7 +356,7 @@
                     layoutCardHand(player);
                 });
 
-                var gap = 200;
+                var gap = 250;
                 moveCards(cards, 0, gap);
 
                 var card = deck.shift();
