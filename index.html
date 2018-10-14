@@ -163,11 +163,13 @@
                 faceup: false
             }
         }
+        // creating global variables
+        var colours = ["b", "g", "r", "y"];
+        var special = ["s","r","p"];
 
         function createDeck() {
             var deck = [];
-            var colours = ["b", "g", "r", "y"];
-            var special = ["s","r","p"];
+
 
             // insert all coloured cards
             colours.forEach(function (colour) {
@@ -183,10 +185,10 @@
             });
 
             // insert black cards
-            for (var i = 0; i < 4; i++) {
-                deck.push(createCard ("xd" + i));
-                deck.push(createCard("xw" + i));
-            }
+            // for (var i = 0; i < 4; i++) {
+            //     deck.push(createCard ("xd" + i));
+            //     deck.push(createCard("xw" + i));
+            // }
 
             return deck;
         }
@@ -332,6 +334,21 @@
             });
         }
 
+        function isValidMove(cardA, cardB){
+            if (colours.indexOf(cardA.id[0]) != -1){
+                // Simple case are the card colour the same
+                if(cardA.id[0] == cardB.id[0]){
+                    return true;
+                }
+                // simple case are the card numbers the same
+                if(cardA.id[1] == cardB.id[1]){
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
         $(document).ready(function(){
             var discard = [];
             var deck = createDeck();
@@ -384,6 +401,10 @@
                 var card = findCard(player.hand, id);
                 // if card found: then action, player select
                 if(card != null) {
+                    if (!isValidMove(card,discard[0])){
+                        return
+                    }
+
                     console.log("found " + id);
                     card = removeCard(player.hand, id);  //player.hand.shift();
                     var div = $("#discard");
@@ -392,7 +413,7 @@
                     card.top = position.top;
                     card.faceup = true;
                     card.zindex = discard.length + 1;
-                    discard.push(card);
+                    discard.unshift(card);
                     // ensure the new card is on the top early
                     $("#" + card.id).css("z-index", card.zindex);
                     moveCards(discard, 0, 0);
