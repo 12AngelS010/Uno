@@ -378,13 +378,13 @@
 
                 console.log(event.currentTarget.id);
                 var id = event.currentTarget.id;
-
+                // Search the bottom player hand to see if selected card is in there
                 var player = findPlayer(players,"bottom-player");
                 var card = findCard(player.hand, id);
-
+                // if card found: then action, player select
                 if(card != null) {
                     console.log("found " + id);
-                    var card = removeCard(player.hand, id);  //player.hand.shift();
+                    card = removeCard(player.hand, id);  //player.hand.shift();
                     var div = $("#discard");
                     var position = div.position();
                     card.left = position.left;
@@ -397,6 +397,17 @@
                     moveCards(discard, 0, 0);
                     layoutCardHand(player);
                     moveCards(player.hand, 0, 0);
+                } else {
+                    card = findCard(deck,id);
+                    if (card != null){
+                        // force card selection to be top of the deck
+                        card = deck.shift();
+                        player.hand.push(card);
+                        layoutCardHand(player);
+                        layoutCardStack(deck, "#deck");
+                        moveCards(deck, 0, 0);
+                        moveCards(player.hand, 0, 0);
+                    }
                 }
             });
 
