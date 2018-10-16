@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>Uno</title>
     <link rel="icon" href="images/favicon.png">
@@ -81,7 +82,7 @@
 </style>
 <body>
 <div>
-    <h1 style="color:White;">Uno Card Game</h1>
+    <h1 style="color:White;">UNO Card Game</h1>
     <a href= "https://www.unorules.com" id="help-link">Official Rules</a>
 </div>
 
@@ -162,11 +163,13 @@
                 faceup: false
             }
         }
+        // creating global variables
+        var colours = ["b", "g", "r", "y"];
+        var special = ["s","r","p"];
 
         function createDeck() {
             var deck = [];
-            var colours = ["b", "g", "r", "y"];
-            var special = ["s","r","p"];
+
 
             // insert all coloured cards
             colours.forEach(function (colour) {
@@ -182,10 +185,10 @@
             });
 
             // insert black cards
-            for (var i = 0; i < 4; i++) {
-                deck.push(createCard ("xd" + i));
-                deck.push(createCard("xw" + i));
-            }
+            // for (var i = 0; i < 4; i++) {
+            //     deck.push(createCard ("xd" + i));
+            //     deck.push(createCard("xw" + i));
+            // }
 
             return deck;
         }
@@ -331,6 +334,33 @@
             });
         }
 
+        function isValidMove(cardA, cardB){
+            if (colours.indexOf(cardA.id[0]) != -1){
+                // Simple case are the card colour the same
+                if(cardA.id[0] == cardB.id[0]){
+                    return true;
+                }
+                // simple case are the card numbers the same
+                if(cardA.id[1] == cardB.id[1]){
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        function playGame(players){
+            var i = 0;
+            while (true){
+                var player = players[i];
+
+                
+                if (player.div == "bottom-player")[
+                    return;
+                ]
+            }
+        }
+
         $(document).ready(function(){
             var discard = [];
             var deck = createDeck();
@@ -372,29 +402,46 @@
                 $("#deal-button").hide();
             });
 
+
+
             $(".card").click(function(event){
+
                 console.log(event.currentTarget.id);
                 var id = event.currentTarget.id;
-
+                // Search the bottom player hand to see if selected card is in there
                 var player = findPlayer(players,"bottom-player");
                 var card = findCard(player.hand, id);
+                // if card found: then action, player select
+                if(card != null) {
+                    if (!isValidMove(card,discard[0])){
+                        return
+                    }
 
-                if(card != null){
                     console.log("found " + id);
-
-                    var card = removeCard(player.hand, id);  //player.hand.shift();
+                    card = removeCard(player.hand, id);  //player.hand.shift();
                     var div = $("#discard");
                     var position = div.position();
                     card.left = position.left;
                     card.top = position.top;
                     card.faceup = true;
                     card.zindex = discard.length + 1;
-                    discard.push(card);
+                    discard.unshift(card);
                     // ensure the new card is on the top early
                     $("#" + card.id).css("z-index", card.zindex);
                     moveCards(discard, 0, 0);
                     layoutCardHand(player);
                     moveCards(player.hand, 0, 0);
+                } else {
+                    card = findCard(deck,id);
+                    if (card != null){
+                        // force card selection to be top of the deck
+                        card = deck.shift();
+                        player.hand.push(card);
+                        layoutCardHand(player);
+                        layoutCardStack(deck, "#deck");
+                        moveCards(deck, 0, 0);
+                        moveCards(player.hand, 0, 0);
+                    }
                 }
             });
 
