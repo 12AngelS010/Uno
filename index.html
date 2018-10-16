@@ -57,6 +57,7 @@
         position: absolute;
         top: 40%;
         left: 50%;
+        display: none;
     }
 
     #help-link {
@@ -184,11 +185,11 @@
                 });
             });
 
-            // insert black cards
-            // for (var i = 0; i < 4; i++) {
-            //     deck.push(createCard ("xd" + i));
-            //     deck.push(createCard("xw" + i));
-            // }
+            //insert black cards
+            for (var i = 0; i < 4; i++) {
+                deck.push(createCard ("xd" + i));
+                deck.push(createCard("xw" + i));
+            }
 
             return deck;
         }
@@ -230,26 +231,52 @@
                 $("#" + card.id).hide();
             })
         }
-
-        function moveCards(cards, delay, gap) {
-            cards.forEach(function(card){
-                $("#" + card.id).delay(delay).animate({left: card.left + 'px', top: card.top + 'px'}, "slow", function(){
-                    $("#" + card.id).show();
-                    $("#" + card.id).css("z-index", card.zindex);
-                    var src = card.faceup ? card.front : card.back;
-                    if($("#" + card.id).attr("src") != src) {
-                        $("#" + card.id).fadeOut(function () {
-                            $(this).attr('src', src).fadeIn();
-                        });
-                    };
+        function showCard (card){
+            $("#" + card.id).show();
+            $("#" + card.id).css("z-index", card.zindex);
+            var src = card.faceup ? card.front : card.back;
+            if($("#" + card.id).attr("src") != src) {
+                $("#" + card.id).fadeOut(function () {
+                    $(this).attr('src', src).fadeIn();
                 });
+            };
+        }
 
-                delay += gap;
+        function animate (list,delay, callback){
+            if (list.length == 0){
+                callback();
+                return;
+            }
+            var item = list.shift();
+            var $el = item.element;
+            var card = item.card;
+            var css = item.css;
+
+            $el.animate(css, delay, function(){
+                showCard(card);
+                animate(list, delay, callback);
             });
         }
 
-        function dealCards(deck, players){
-            var number = 7;
+        function moveCards(cards, delay, callback) {
+            var animations = [];
+            cards.forEach(function(card){
+                var css = {left: card.left + "px", top: card.top + "px"};
+                if (delay == 0){
+                    $("#" + card.id).css(css);
+                    showCard(card);
+                } else {
+                    animations.push({element: $("#" + card.id), card: card, css: css});
+                }
+            });
+            if (delay == 0){
+                callback();
+            } else{
+                animate(animations, delay, callback);
+            }
+        }
+
+        function dealCards(deck, players, number){
             var cards = [];
 
             for(var i = 0; i < number; i++){
@@ -335,6 +362,9 @@
         }
 
         function isValidMove(cardA, cardB){
+            if ((cardA.id[0]) == "x"){
+                return true;
+            }
             if (colours.indexOf(cardA.id[0]) != -1){
                 // Simple case are the card colour the same
                 if(cardA.id[0] == cardB.id[0]){
@@ -349,18 +379,78 @@
             return false;
         }
 
-        function playGame(players){
-            var i = 0;
-            while (true){
-                var player = players[i];
+            // function playGame(players){
+            //     var i = 0;
+            //     while (true){
+            //         var player = players[i];
+            //
+            //
+            //         if (player.div == "bottom-player")[
+            //             return;
+            //         ]
+            //     }
+            // }
 
-                
-                if (player.div == "bottom-player")[
-                    return;
-                ]
-            }
+        function discardCard (card, player, discard, callback){
+            var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
+            discard.unshift(card);
+
+            $("#" + selectedCard.id).css("z-index", 2000);
+            layoutCardStack(discard, "#discard");
+            layoutCardHand(player);
+
+            moveCards([selectedCard], 250, function (){
+                moveCards(player.hand, 100, function(){
+                    moveCards(discard, 0, function(){
+                        callback();
+                    })
+                })
+            });
         }
 
+        function selectFromDeck (card, player ,deck, callback){
+            // force card selection to be top of the deck
+            var selectedCard = deck.shift();
+            player.hand.push(selectedCard);
+            layoutCardStack(deck, "#deck");
+            layoutCardHand(player);
+            moveCards([selectedCard], 250, function (){
+                moveCards (player.hand, 100, function() {
+                    moveCards(deck, 0, function () {
+                        callback();
+                    })
+                })
+            })
+
+        }
+        function cardClick (event, players, discard, deck){
+            $(".card").unbind("click");
+            var id = event.currentTarget.id;
+
+            // Search the bottom player hand to see if selected card is in there
+            var player = findPlayer(players,"bottom-player");
+            var card = findCard(player.hand, id);
+            // if card found: then action, player select
+            if(card != null) {
+                discardCard(card, player, discard, function(){
+                    $(".card").click(function(event){
+                        cardClick(event, players, discard, deck);
+                    });
+                });
+                return;
+            }
+
+            // search the deck to see  if its in there
+            card = findCard(deck, id);
+            if (card != null){
+                selectFromDeck(card, player, deck, function(){
+                    $(".card").click(function(event){
+                        cardClick(event, players, discard, deck);
+                    });
+                });
+                return;
+            }
+        }
         $(document).ready(function(){
             var discard = [];
             var deck = createDeck();
@@ -376,75 +466,36 @@
 
             deck = shuffle(deck);
             layoutCardStack( deck, "#deck");
-            moveCards(deck, 0, 0);
-            //showCards(deck);
+            moveCards(deck, 0, function(){});
+            $("#deal-button").show();
+
 
             $("#deal-button").click(function(){
-                var cards = dealCards(deck, players);
+                $("#deal-button").hide();
+
+                var cards = dealCards(deck, players, 7);
 
                 players.forEach(function(player){
                     layoutCardHand(player);
                 });
 
-                var gap = 250;
-                moveCards(cards, 0, gap);
-
                 var card = deck.shift();
                 card.faceup = true;
                 discard.push(card);
+
                 layoutCardStack(discard, "#discard");
-                var delay = gap*players.length*7;
-                moveCards(discard, delay, 0);
-
                 layoutCardStack(deck, "#deck");
-                moveCards(deck, delay, 0);
 
-                $("#deal-button").hide();
+                moveCards(cards, 50, function (){
+                    moveCards(discard, 250, function(){
+                        moveCards(deck, 0, function (){
+                            $(".card").click(function(event){
+                                cardClick(event, players, discard, deck);
+                            })
+                        })
+                    })
+                });
             });
-
-
-
-            $(".card").click(function(event){
-
-                console.log(event.currentTarget.id);
-                var id = event.currentTarget.id;
-                // Search the bottom player hand to see if selected card is in there
-                var player = findPlayer(players,"bottom-player");
-                var card = findCard(player.hand, id);
-                // if card found: then action, player select
-                if(card != null) {
-                    if (!isValidMove(card,discard[0])){
-                        return
-                    }
-
-                    console.log("found " + id);
-                    card = removeCard(player.hand, id);  //player.hand.shift();
-                    var div = $("#discard");
-                    var position = div.position();
-                    card.left = position.left;
-                    card.top = position.top;
-                    card.faceup = true;
-                    card.zindex = discard.length + 1;
-                    discard.unshift(card);
-                    // ensure the new card is on the top early
-                    $("#" + card.id).css("z-index", card.zindex);
-                    moveCards(discard, 0, 0);
-                    layoutCardHand(player);
-                    moveCards(player.hand, 0, 0);
-                } else {
-                    card = findCard(deck,id);
-                    if (card != null){
-                        // force card selection to be top of the deck
-                        card = deck.shift();
-                        player.hand.push(card);
-                        layoutCardHand(player);
-                        layoutCardStack(deck, "#deck");
-                        moveCards(deck, 0, 0);
-                        moveCards(player.hand, 0, 0);
-                    }
-                }
-            });
-
         });
 
     </script>
