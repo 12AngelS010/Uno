@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
+    <meta name="viewport" content ="width=device-width">
+
+    <!--Set-up the page title and browser tab icon-->
     <title>Uno</title>
     <link rel="icon" href="images/favicon.png">
+
+    <!--Bootstrap and JQuery as recommended by www.w3schools.com-->
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
@@ -13,96 +17,169 @@
 
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
 </head>
 <style>
     body {
         background-color: #00a000;
     }
+
     #top-player {
         position: absolute;
-        top: 0%;
-        left: 50%;
+        /*top: 10%;*/
+        /*left: 50%;*/
     }
 
     #left-player{
         position: absolute;
-        top:50%;
-        left: 5%;
+        /*top:50%;*/
+        /*left: 5%;*/
     }
 
     #right-player {
         position: absolute;
-        top: 50%;
-        left: 90%;
+        /*top: 50%;*/
+        /*left: 90%;*/
     }
 
     #bottom-player {
         position: absolute;
-        top: 80%;
-        left: 50%;
+        /*top: 80%;*/
+        /*left: 50%;*/
     }
 
     #deck {
         position: absolute;
-        top: 40%;
-        left: 40%;
+        /*top: 40%;*/
+        /*left: 40%;*/
     }
 
     #discard {
         position: absolute;
-        top: 40%;
-        left: 47%;
+        /*top: 40%;*/
+        /*left: 50%;*/
     }
+
     #deal-button {
         position: absolute;
-        top: 40%;
-        left: 50%;
         display: none;
+        /*top: 40%;*/
+        /*left: 50%;*/
     }
 
-    #help-link {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-    }
-
-    .button {
-        background-color: #f44336;
-        border: none;
-        color: white;
-        padding: 15px 32px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-    }
+    /*.button {*/
+        /*background-color: #f44336;*/
+        /*border: none;*/
+        /*color: white;*/
+        /*padding: 15px 32px;*/
+        /*text-align: center;*/
+        /*text-decoration: none;*/
+        /*display: inline-block;*/
+        /*font-size: 16px;*/
+    /*}*/
 
     img {
         position: absolute;
     }
+
+    .card {
+        width: 70px;
+        height: 105px;
+    }
+
+    h1 {
+        color:White;
+        font-size: 30px;
+    }
+
+    .page-header {
+        margin: 20px 0 20px;
+        padding-bottom: 0px;
+    }
+
+    #help-link {
+        float: right;
+        font-size:15px;
+        align: middle;
+    }
+
+    .vline {
+        position: absolute;
+        background-color: black;
+        width: 1px;
+        height: 100%;
+        left: 50%;
+        top: 0%;
+    }
+    .hline {
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        left: 50%;
+        top: 0;
+        background-color: black;
+        transform: rotate(90deg);
+    }
+
 </style>
 <body>
-<div>
-    <h1 style="color:White;">UNO Card Game</h1>
-    <a href= "https://www.unorules.com" id="help-link">Official Rules</a>
-</div>
-
-    <div id="cards"></div>
-    <div class="container">
-
-        <div id="top-player"></div>
-        <div id="left-player"></div>
-        <div id="right-player"></div>
-        <div id="bottom-player"></div>
-
-        <div id="deck"></div>
-        <div id="discard"></div>
-
-        <div id="deal-button">
-            <button class="button">Deal</button>
-        </div>
+<div class="vline"></div>
+<div class="hline"></div>
+<div class="container">
+    <div class="page-header">
+        <h1 id="header">Uno Card Game<span><a id="help-link" href= "https://www.unorules.com" >Official Rules</a></span>
+        </h1>
     </div>
-	
+</div>
+<div id="cards"></div>
+<div>
+    <div id="top-player"></div>
+    <div id="left-player"></div>
+    <div id="right-player"></div>
+    <div id="bottom-player"></div>
+
+    <div id="deck"></div>
+    <div id="discard"></div>
+
+    <div id="deal-button">
+        <button type="button" class="btn btn-danger btn-lg">Deal</button>
+    </div>
+</div>
+<!--<div class="container">-->
+    <!--<div id="cards"></div>-->
+    <!--<div class="row">-->
+        <!--<div class="col-xs-4"></div>-->
+        <!--<div class="col-xs-4"><div id="top-player"></div></div>-->
+        <!--<div class="col-xs-4"></div>-->
+    <!--</div>-->
+    <!--<div class="row">-->
+        <!--<div class="col-xs-4"><div id="left-player"></div></div>-->
+        <!--<div class="col-xs-4"><div id="deck"></div><div id="discard"></div><div id="deal-button"><button class="button">Deal</button></div></div>-->
+        <!--<div class="col-xs-4"><div id="right-player"></div></div>-->
+    <!--</div>-->
+    <!--<div class="row">-->
+        <!--<div class="col-xs-4"></div>-->
+        <!--<div class="col-xs-4"><div id="bottom-player"></div></div>-->
+        <!--<div class="col-xs-4"></div>-->
+    <!--</div>-->
+<!--</div>-->
+<!--<table style="width:100%">-->
+    <!--<tr>-->
+        <!--<th></th>-->
+        <!--<th><div id="top-player"></div></th>-->
+        <!--<th></th>-->
+    <!--</tr>-->
+    <!--<tr>-->
+        <!--<td><div id="left-player"></td>-->
+        <!--<td><div id="deck"></div><div id="discard"></div><div id="deal-button"><button type="button" class="btn btn-primary">Deal</button></div></td>-->
+        <!--<td><div id="right-player"></div></td>-->
+    <!--</tr>-->
+    <!--<tr>-->
+        <!--<td></td>-->
+        <!--<td><div id="bottom-player"></div></td>-->
+        <!--<td></td>-->
+    <!--</tr>-->
+<!--</table>-->
     <script>
 
         function idToImage(card){
@@ -164,13 +241,11 @@
                 faceup: false
             }
         }
-        // creating global variables
-        var colours = ["b", "g", "r", "y"];
-        var special = ["s","r","p"];
 
         function createDeck() {
             var deck = [];
-
+            var colours = ["b", "g", "r", "y"];
+            var special = ["s","r","p"];
 
             // insert all coloured cards
             colours.forEach(function (colour) {
@@ -185,7 +260,7 @@
                 });
             });
 
-            //insert black cards
+            // insert black cards
             for (var i = 0; i < 4; i++) {
                 deck.push(createCard ("xd" + i));
                 deck.push(createCard("xw" + i));
@@ -231,7 +306,8 @@
                 $("#" + card.id).hide();
             })
         }
-        function showCard (card){
+
+        function showCard(card){
             $("#" + card.id).show();
             $("#" + card.id).css("z-index", card.zindex);
             var src = card.faceup ? card.front : card.back;
@@ -242,17 +318,18 @@
             };
         }
 
-        function animate (list,delay, callback){
-            if (list.length == 0){
+        function animate(list, delay, callback) {
+            if (list.length === 0) {
                 callback();
                 return;
             }
+
             var item = list.shift();
             var $el = item.element;
             var card = item.card;
             var css = item.css;
 
-            $el.animate(css, delay, function(){
+            $el.animate(css, delay, "swing", function () {
                 showCard(card);
                 animate(list, delay, callback);
             });
@@ -261,17 +338,18 @@
         function moveCards(cards, delay, callback) {
             var animations = [];
             cards.forEach(function(card){
-                var css = {left: card.left + "px", top: card.top + "px"};
-                if (delay == 0){
+                var css = {left: card.left + 'px', top: card.top + 'px'};
+                if(delay == 0){
                     $("#" + card.id).css(css);
                     showCard(card);
                 } else {
                     animations.push({element: $("#" + card.id), card: card, css: css});
                 }
             });
-            if (delay == 0){
+
+            if(delay == 0){
                 callback();
-            } else{
+            } else {
                 animate(animations, delay, callback);
             }
         }
@@ -322,10 +400,11 @@
 
         function layoutCardStack(cards, name){
             var div = $(name);
-            var position = div.position();
+            var position = div.offset();
 
             var offset = 0;
-            var zindex = cards.length;
+            // add a large offset so that selecting a card will take it to the top
+            var zindex = cards.length + 400;
 
             cards.forEach(function(card){
                 card.left = position.left - offset;
@@ -339,18 +418,19 @@
 
         function layoutCardHand(player){
             var div = $("#" + player.div);
-            var position = div.position();
+            var position = div.offset();
 
             var offsetLeft = 0;
             var offsetTop = 0;
             var zindex = 0;
             var count = player.hand.length;
+            var cardWidth = 0;
 
-            var adjleft = player.offsetLeft*count/2;
+            var adjleft = (cardWidth/2) - player.offsetLeft*(count - 1)/2;
             var adjtop = player.offsetTop*count/2;
 
             player.hand.forEach(function(card){
-                card.left = position.left + offsetLeft - adjleft;
+                card.left = position.left + offsetLeft + adjleft;
                 card.top = position.top + offsetTop - adjtop;
                 card.zindex = zindex;
                 card.faceup = player.faceup;
@@ -361,97 +441,67 @@
             });
         }
 
-        function isValidMove(cardA, cardB){
-            if ((cardA.id[0]) == "x"){
-                return true;
-            }
-            if (colours.indexOf(cardA.id[0]) != -1){
-                // Simple case are the card colour the same
-                if(cardA.id[0] == cardB.id[0]){
-                    return true;
-                }
-                // simple case are the card numbers the same
-                if(cardA.id[1] == cardB.id[1]){
-                    return true;
-                }
-                return false;
-            }
-            return false;
-        }
-
-            // function playGame(players){
-            //     var i = 0;
-            //     while (true){
-            //         var player = players[i];
-            //
-            //
-            //         if (player.div == "bottom-player")[
-            //             return;
-            //         ]
-            //     }
-            // }
-
-        function discardCard (card, player, discard, callback){
-            var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
-            discard.unshift(card);
-
-            $("#" + selectedCard.id).css("z-index", 2000);
-            layoutCardStack(discard, "#discard");
-            layoutCardHand(player);
-
-            moveCards([selectedCard], 250, function (){
-                moveCards(player.hand, 100, function(){
-                    moveCards(discard, 0, function(){
-                        callback();
-                    })
-                })
-            });
-        }
-
-        function selectFromDeck (card, player ,deck, callback){
-            // force card selection to be top of the deck
-            var selectedCard = deck.shift();
-            player.hand.push(selectedCard);
-            layoutCardStack(deck, "#deck");
-            layoutCardHand(player);
-            moveCards([selectedCard], 250, function (){
-                moveCards (player.hand, 100, function() {
-                    moveCards(deck, 0, function () {
-                        callback();
-                    })
-                })
-            })
-
-        }
-        function cardClick (event, players, discard, deck){
+        function cardClick(event, players, discard){
+            // stop other clicks being managed
             $(".card").unbind("click");
+
             var id = event.currentTarget.id;
 
-            // Search the bottom player hand to see if selected card is in there
             var player = findPlayer(players,"bottom-player");
             var card = findCard(player.hand, id);
-            // if card found: then action, player select
-            if(card != null) {
-                discardCard(card, player, discard, function(){
-                    $(".card").click(function(event){
-                        cardClick(event, players, discard, deck);
-                    });
-                });
-                return;
-            }
 
-            // search the deck to see  if its in there
-            card = findCard(deck, id);
-            if (card != null){
-                selectFromDeck(card, player, deck, function(){
-                    $(".card").click(function(event){
-                        cardClick(event, players, discard, deck);
+            if(card != null){
+                var selectedCard = removeCard(player.hand, id);  //player.hand.shift();
+                discard.unshift(selectedCard);
+
+                // ensure the new card is on the top early
+                $("#" + selectedCard.id).css("z-index", 2000);
+
+                layoutCardStack(discard, "#discard");
+                layoutCardHand(player);
+
+                // move the selected card first - looks nicer
+                moveCards([selectedCard], 250, function(){
+                    moveCards(player.hand, 100, function(){
+                        moveCards(discard, 0, function(){
+                            // now handle card click events
+                            $(".card").click(function(event){
+                                cardClick(event, players, discard);
+                            });
+                        });
                     });
                 });
-                return;
             }
         }
+
         $(document).ready(function(){
+            var width = $(window).width();
+            var height = $(window).height();
+
+            var tableWidth = Math.min(700, width);
+            var tableHeight = Math.min(700, height);
+
+            var cardWidth = 70;
+            var cardHeight = 100;
+
+            var headerOffset = 133;
+
+            $("#top-player").css("left", width/2 - cardWidth/2 + "px");
+            $("#bottom-player").css("left", width/2 - cardWidth/2 + "px");
+            $("#left-player").css("left", (width/2 - tableWidth/2) + 10 + "px");
+            $("#right-player").css("left", (width/2 + tableWidth/2) - cardWidth - 10 + "px");
+            $("#deck").css("left", width/2 - cardWidth - 10 + "px");
+            $("#discard").css("left", width/2 + 10 + "px");
+            $("#deal-button").css("left", width/2 + cardWidth  + "px");
+
+            $("#top-player").css("top", headerOffset + 20 + "px");
+            $("#bottom-player").css("top", tableHeight - cardHeight - 20 + "px");
+            $("#left-player").css("top", tableHeight/2 + "px");
+            $("#right-player").css("top", tableHeight/2 + "px");
+            $("#deck").css("top", tableHeight/2 + "px");
+            $("#discard").css("top", tableHeight/2 + "px");
+            $("#deal-button").css("top", tableHeight/2 + "px");
+
             var discard = [];
             var deck = createDeck();
             var players = [];
@@ -469,7 +519,6 @@
             moveCards(deck, 0, function(){});
             $("#deal-button").show();
 
-
             $("#deal-button").click(function(){
                 $("#deal-button").hide();
 
@@ -486,14 +535,15 @@
                 layoutCardStack(discard, "#discard");
                 layoutCardStack(deck, "#deck");
 
-                moveCards(cards, 50, function (){
+                moveCards(cards, 250, function(){
                     moveCards(discard, 250, function(){
-                        moveCards(deck, 0, function (){
+                        moveCards(deck, 0, function(){
+                            // now handle card click events
                             $(".card").click(function(event){
-                                cardClick(event, players, discard, deck);
-                            })
-                        })
-                    })
+                                cardClick(event, players, discard);
+                            });
+                        });
+                    });
                 });
             });
         });
