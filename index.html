@@ -24,7 +24,7 @@
         position: absolute;
     }
 
-    #left-player{
+    #left-player {
         position: absolute;
     }
 
@@ -59,7 +59,7 @@
     }
 
     h1 {
-        color:White;
+        color: White;
         font-size: 30px;
     }
 
@@ -70,7 +70,7 @@
 
     #help-link {
         float: right;
-        font-size:15px;
+        font-size: 15px;
         align: middle;
     }
 
@@ -97,7 +97,7 @@
 <body>
 <div>
     <h1>UNO Card Game</h1>
-    <a href= "https://www.unorules.com" id="help-link">Official Rules</a>
+    <a href="https://www.unorules.com" id="help-link">Official Rules</a>
 </div>
 
 <div id="cards"></div>
@@ -117,28 +117,28 @@
 </div>
 
 <script>
-    function idToImage(card){
+    function idToImage(card) {
         var image = "images/";
-        switch(card[0]){
+        switch (card[0]) {
             case "b":
-                image = image +"blue";
+                image = image + "blue";
                 break;
             case "g":
-                image = image +"green";
+                image = image + "green";
                 break;
             case "r":
-                image = image +"red";
+                image = image + "red";
                 break;
             case "y":
-                image = image +"yellow";
+                image = image + "yellow";
                 break;
             case "x":
-                image = image +"black";
+                image = image + "black";
                 break;
             default:
                 break;
         }
-        switch(card[1]){
+        switch (card[1]) {
             case "s":
                 image = image + "_skip";
                 break;
@@ -163,10 +163,11 @@
     }
 
     //create deck of cards
-    function createCard (id) {
-        return {id: id,
-            left:0,
-            top:0,
+    function createCard(id) {
+        return {
+            id: id,
+            left: 0,
+            top: 0,
             zindex: 0,
             front: idToImage(id),
             back: "images/back.png",
@@ -176,7 +177,7 @@
 
     // Create global variables
     var colours = ["b", "g", "r", "y"];
-    var special = ["s","r","p"];
+    var special = ["s", "r", "p"];
 
     function createDeck() {
         var deck = [];
@@ -222,19 +223,19 @@
         });
     }
 
-    function showCards(cards){
-        cards.forEach(function(card){
+    function showCards(cards) {
+        cards.forEach(function (card) {
             $("#" + card.id).show();
         })
     }
 
-    function hideCards(cards){
-        cards.forEach(function(card){
+    function hideCards(cards) {
+        cards.forEach(function (card) {
             $("#" + card.id).hide();
         })
     }
 
-    function showCard (card){
+    function showCard(card) {
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
         /*
@@ -247,8 +248,8 @@
         */
     }
 
-    function animate (list,delay, callback){
-        if (list.length == 0){
+    function animate(list, delay, callback) {
+        if (list.length == 0) {
             callback();
             return;
         }
@@ -260,11 +261,11 @@
 
         // turn the card around before animation
         var src = card.faceup ? card.front : card.back;
-        if($("#" + card.id).attr("src") != src) {
+        if ($("#" + card.id).attr("src") != src) {
             $("#" + card.id).attr('src', src);
-        };
+        }
 
-        $el.animate(css, delay, function(){
+        $el.animate(css, delay, function () {
             showCard(card);
             animate(list, delay, callback);
         });
@@ -272,26 +273,26 @@
 
     function moveCards(cards, delay, callback) {
         var animations = [];
-        cards.forEach(function(card){
+        cards.forEach(function (card) {
             var css = {left: card.left + "px", top: card.top + "px", width: card.size, height: "auto"};
-            if (delay == 0){
+            if (delay == 0) {
                 $("#" + card.id).css(css);
                 showCard(card);
             } else {
                 animations.push({element: $("#" + card.id), card: card, css: css});
             }
         });
-        if (delay == 0){
+        if (delay == 0) {
             callback();
-        } else{
+        } else {
             animate(animations, delay, callback);
         }
     }
 
-    function dealCards(deck, players, number){
+    function dealCards(deck, players, number) {
         var cards = [];
-        for(var i = 0; i < number; i++){
-            players.forEach(function(player){
+        for (var i = 0; i < number; i++) {
+            players.forEach(function (player) {
                 var card = deck.shift();
                 player.hand.push(card);
                 cards.push(card);
@@ -300,64 +301,64 @@
         return cards;
     }
 
-    function findCard(cards, id){
+    function findCard(cards, id) {
         var ret = null;
-        cards.forEach(function(card){
-            if (card.id == id){
+        cards.forEach(function (card) {
+            if (card.id == id) {
                 ret = card;
             }
         });
         return ret;
     }
 
-    function findPlayer(players, div){
+    function findPlayer(players, div) {
         var ret = null;
-        players.forEach(function(player){
-            if (player.div == div){
+        players.forEach(function (player) {
+            if (player.div == div) {
                 ret = player;
             }
         });
         return ret;
     }
 
-    function removeCard (cards, id){
+    function removeCard(cards, id) {
         var ret = null;
         for (var i = cards.length - 1; i >= 0; --i) {
             if (cards[i].id == id) {
                 ret = cards[i];
-                cards.splice(i,1);
+                cards.splice(i, 1);
             }
         }
         return ret;
     }
 
-    function layoutCardStack(cards, name, faceup){
+    function layoutCardStack(cards, name, faceup) {
         var div = $(name);
         var position = div.position();
         var offset = 0;
         var zindex = cards.length;
-        cards.forEach(function(card){
+        cards.forEach(function (card) {
             card.left = position.left - offset;
             card.top = position.top - offset;
             card.zindex = zindex;
             card.faceup = faceup;
             card.size = 70;
             zindex--;
-            offset-= 2;
+            offset -= 2;
             offset = Math.max(-10, offset);
         });
     }
 
-    function layoutCardHand(player){
+    function layoutCardHand(player) {
         var div = $("#" + player.div);
         var position = div.position();
         var offsetLeft = 0;
         var offsetTop = 0;
         var zindex = 0;
         var count = player.hand.length;
-        var adjleft = player.offsetLeft*count/2;
-        var adjtop = player.offsetTop*count/2;
-        player.hand.forEach(function(card){
+        var adjleft = player.offsetLeft * count / 2;
+        var adjtop = player.offsetTop * count / 2;
+        player.hand.forEach(function (card) {
             card.left = position.left + offsetLeft - adjleft;
             card.top = position.top + offsetTop - adjtop;
             card.zindex = zindex;
@@ -369,40 +370,23 @@
         });
     }
 
-        function layoutCardHands (players){
-            players.forEach(function(player){
-                layoutCardHand(player);
-            });
-        }
+    function layoutCardHands(players) {
+        players.forEach(function (player) {
+            layoutCardHand(player);
+        });
+    }
 
-        function isValidMove(cardA, cardB){
-            if ((cardA.id[0]) == "x"){
-                return true;
-            }
-            if (colours.indexOf(cardA.id[0]) != -1){
-                // Simple case are the card colour the same
-                if(cardA.id[0] == cardB.id[0]){
-                    return true;
-                }
-                // simple case are the card numbers the same
-                if(cardA.id[1] == cardB.id[1]){
-                    return true;
-                }
-                return false;
-            }
-            return false;
-        }
-    function isValidMove(cardA, cardB){
-        if ((cardA.id[0]) == "x"){
+    function isValidMove(cardA, cardB) {
+        if ((cardA.id[0]) == "x") {
             return true;
         }
-        if (colours.indexOf(cardA.id[0]) != -1){
+        if (colours.indexOf(cardA.id[0]) != -1) {
             // Simple case are the card colour the same
-            if(cardA.id[0] == cardB.id[0]){
+            if (cardA.id[0] == cardB.id[0]) {
                 return true;
             }
             // simple case are the card numbers the same
-            if(cardA.id[1] == cardB.id[1]){
+            if (cardA.id[1] == cardB.id[1]) {
                 return true;
             }
             return false;
@@ -410,70 +394,74 @@
         return false;
     }
 
-    function playGame(index, players, discard, deck, callback){
+    function isValidMove(cardA, cardB) {
+        if ((cardA.id[0]) == "x") {
+            return true;
+        }
+        if (colours.indexOf(cardA.id[0]) != -1) {
+            // Simple case are the card colour the same
+            if (cardA.id[0] == cardB.id[0]) {
+                return true;
+            }
+            // simple case are the card numbers the same
+            if (cardA.id[1] == cardB.id[1]) {
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    function playGame(index, players, discard, deck, callback) {
         var player = players[index];
 
-        if (player.div == "bottom-player"){
+        if (player.div == "bottom-player") {
             callback();
             return;
         }
 
         var found = false;
-        player.hand.forEach(function(card){
-            if(!found && isValidMove(card, discard[0])){
+        player.hand.forEach(function (card) {
+            if (!found && isValidMove(card, discard[0])) {
                 found = true;
-                discardCard(card, player, discard, function(){
+                discardCard(card, player, discard, function () {
                     playGame(index + 1, players, discard, deck, callback)
                 })
             }
         });
 
-        if(!found){
-            selectFromDeck(player, deck, function(){
+        if (!found) {
+            selectFromDeck(player, deck, function () {
                 playGame(index + 1, players, discard, deck, callback)
             });
         }
     }
 
-    function discardCard (card, player, discard, callback){
+    function discardCard(card, player, discard, callback) {
         var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
         discard.unshift(card);
         $("#" + selectedCard.id).css("z-index", 2000);
         layoutCardStack(discard, "#discard", true);
         layoutCardHand(player);
-        moveCards([selectedCard], 500, function (){
-            moveCards(player.hand, 50, function(){
-                moveCards(discard, 0, function(){
+        moveCards([selectedCard], 500, function () {
+            moveCards(player.hand, 50, function () {
+                moveCards(discard, 0, function () {
                     callback();
                 })
             })
         });
     }
-        function discardCard (card, player, discard, callback){
-            var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
-            discard.unshift(card);
 
-            $("#" + selectedCard.id).css("z-index", 2000);
-            layoutCardStack(discard, "#discard");
-            layoutCardHand(player);
-
-            moveCards([selectedCard], 250, function (){
-                moveCards(discard, 0, function(){
-                    moveCards(player.hand, 100, function(){
-                        callback();
-                    })
-                })
-            });
-        }
-
-    function selectFromDeck (player ,deck, callback){
+    function selectFromDeck(player, deck, callback) {
         // force card selection to be top of the deck
         var selectedCard = deck.shift();
         player.hand.push(selectedCard);
+
         layoutCardStack(deck, "#deck", false);
         layoutCardHand(player);
-        moveCards([selectedCard], 250, function (){
-            moveCards (player.hand, 50, function() {
+
+        moveCards([selectedCard], 250, function () {
+            moveCards(player.hand, 50, function () {
                 moveCards(deck, 0, function () {
                     callback();
                 })
@@ -481,70 +469,43 @@
         })
     }
 
-    function cardClick (event, players, discard, deck){
+    function cardClick(event, players, discard, deck) {
         $(".card").unbind("click");
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
-        var player = findPlayer(players,"bottom-player");
+        var player = findPlayer(players, "bottom-player");
         var card = findCard(player.hand, id);
         // if card found: then action, player select
-        if(card != null) {
-            if(isValidMove(card, discard[0])) {
+        if (card != null) {
+            if (isValidMove(card, discard[0])) {
                 discardCard(card, player, discard, function () {
-                    playGame(0, players, discard, deck, function(){
+                    playGame(0, players, discard, deck, function () {
                         $(".card").click(function (event) {
                             cardClick(event, players, discard, deck);
                         });
                     })
-        function selectFromDeck (card, player ,deck, callback){
-            // force card selection to be top of the deck
-            var selectedCard = deck.shift();
-            player.hand.push(selectedCard);
-            layoutCardStack(deck, "#deck");
-            layoutCardHand(player);
-            moveCards([selectedCard], 250, function (){
-                moveCards(deck, 0, function () {
-                    moveCards (player.hand, 100, function() {
-                        callback();
-                    })
                 })
-            })
-
-        }
-        function cardClick (event, players, discard, deck){
-            $(".card").unbind("click");
-            var id = event.currentTarget.id;
-
-            // Search the bottom player hand to see if selected card is in there
-            var player = findPlayer(players,"bottom-player");
-            var card = findCard(player.hand, id);
-            // if card found: then action, player select
-            if(card != null) {
-                discardCard(card, player, discard, function(){
-                    $(".card").click(function(event){
-                        cardClick(event, players, discard, deck);
-                    });
-                });
-            } else {
-                $(".card").click(function (event) {
-                    cardClick(event, players, discard, deck);
-                });
             }
-            return;
-        }
-        // search the deck to see  if its in there
-        card = findCard(deck, id);
-        if (card != null){
-            selectFromDeck(player, deck, function(){
-                $(".card").click(function(event){
-                    cardClick(event, players, discard, deck);
-                });
-            });
-            return;
         }
     }
 
-    $(document).ready(function(){
+
+    function selectFromDeck(card, player, deck, callback) {
+        // force card selection to be top of the deck
+        var selectedCard = deck.shift();
+        player.hand.push(selectedCard);
+        layoutCardStack(deck, "#deck");
+        layoutCardHand(player);
+        moveCards([selectedCard], 250, function () {
+            moveCards(deck, 0, function () {
+                moveCards(player.hand, 100, function () {
+                    callback();
+                })
+            })
+        })
+    }
+
+    $(document).ready(function () {
         var width = $(window).width();
         var height = $(window).height();
 
@@ -556,45 +517,79 @@
 
         var headerOffset = 133;
 
-        $("#top-player").css("left", width/2 - cardWidth/2 + "px");
-        $("#bottom-player").css("left", width/2 - cardWidth/2 + "px");
-        $("#left-player").css("left", (width/2 - tableWidth/2) + 20 + "px");
-        $("#right-player").css("left", (width/2 + tableWidth/2) - cardWidth + "px");
+        $("#top-player").css("left", width / 2 - cardWidth / 2 + "px");
+        $("#bottom-player").css("left", width / 2 - cardWidth / 2 + "px");
+        $("#left-player").css("left", (width / 2 - tableWidth / 2) + 20 + "px");
+        $("#right-player").css("left", (width / 2 + tableWidth / 2) - cardWidth + "px");
 
-        $("#deck").css("left", width/2 - cardWidth - 10 + "px");
-        $("#discard").css("left", width/2 + 10 + "px");
-        $("#deal-button").css("left", width/2 + cardWidth/2  + "px");
+        $("#deck").css("left", width / 2 - cardWidth - 10 + "px");
+        $("#discard").css("left", width / 2 + 10 + "px");
+        $("#deal-button").css("left", width / 2 + cardWidth / 2 + "px");
 
         $("#top-player").css("top", headerOffset + 20 + "px");
         $("#bottom-player").css("top", tableHeight - cardHeight + "px");
-        $("#left-player").css("top", tableHeight/2 + "px");
-        $("#right-player").css("top", tableHeight/2 + "px");
+        $("#left-player").css("top", tableHeight / 2 + "px");
+        $("#right-player").css("top", tableHeight / 2 + "px");
 
-        $("#deck").css("top", tableHeight/2 + "px");
-        $("#discard").css("top", tableHeight/2 + "px");
-        $("#deal-button").css("top", tableHeight/2 + cardHeight/4+ "px");
+        $("#deck").css("top", tableHeight / 2 + "px");
+        $("#discard").css("top", tableHeight / 2 + "px");
+        $("#deal-button").css("top", tableHeight / 2 + cardHeight / 4 + "px");
 
         var discard = [];
         var deck = createDeck();
         var players = [];
 
-        players.push({hand:[], name:"James", div: "left-player", offsetTop: 15, offsetLeft: 0, faceup: false, size: 50});
-        players.push({hand:[], name:"Sam", div: "top-player", offsetTop: 0, offsetLeft: 15, faceup: false, size: 50});
-        players.push({hand:[], name:"Emily", div: "right-player", offsetTop: 15, offsetLeft: 0, faceup: false, size: 50});
-        players.push({hand:[], name:"Barney", div: "bottom-player", offsetTop: 0, offsetLeft: 25, faceup: true, size: 70});
+        players.push({
+            hand: [],
+            name: "James",
+            div: "left-player",
+            offsetTop: 15,
+            offsetLeft: 0,
+            faceup: false,
+            size: 50
+        });
+        players.push({
+            hand: [],
+            name: "Sam",
+            div: "top-player",
+            offsetTop: 0,
+            offsetLeft: 15,
+            faceup: false,
+            size: 50
+        });
+        players.push({
+            hand: [],
+            name: "Emily",
+            div: "right-player",
+            offsetTop: 15,
+            offsetLeft: 0,
+            faceup: false,
+            size: 50
+        });
+        players.push({
+            hand: [],
+            name: "Barney",
+            div: "bottom-player",
+            offsetTop: 0,
+            offsetLeft: 25,
+            faceup: true,
+            size: 70
+        });
 
         // put the cards initially in their own div area
         printCards(deck, "#cards");
 
         deck = shuffle(deck);
-        layoutCardStack( deck, "#deck", false);
-        moveCards(deck, 0, function(){});
+        layoutCardStack(deck, "#deck", false);
+        moveCards(deck, 0, function () {
+        });
 
         $("#deal-button").show();
-        $("#deal-button").click(function(){
+
+        $("#deal-button").click(function () {
             $("#deal-button").hide();
             var cards = dealCards(deck, players, 7);
-            players.forEach(function(player){
+            players.forEach(function (player) {
                 layoutCardHand(player);
             });
             var card = deck.shift();
@@ -602,49 +597,18 @@
             discard.push(card);
             layoutCardStack(discard, "#discard", true);
             layoutCardStack(deck, "#deck", false);
-            moveCards(cards, 250, function (){
-                moveCards(discard, 250, function(){
-                    moveCards(deck, 0, function (){
-                        $(".card").click(function(event){
+            moveCards(cards, 250, function () {
+                moveCards(discard, 250, function () {
+                    moveCards(deck, 0, function () {
+                        $(".card").click(function (event) {
                             cardClick(event, players, discard, deck);
                         })
                     })
                 })
             });
         });
-    });
+    })
+
 </script>
-            deck = shuffle(deck);
-            layoutCardStack( deck, "#deck");
-            moveCards(deck, 0, function(){});
-            $("#deal-button").show();
-
-
-            $("#deal-button").click(function(){
-                $("#deal-button").hide();
-
-                var cards = dealCards(deck, players, 7);
-
-                var card = deck.shift();
-                card.faceup = true;
-                discard.push(card);
-
-                layoutCardHands(players);
-                layoutCardStack(discard, "#discard");
-                layoutCardStack(deck, "#deck");
-
-                moveCards(cards, 250, function (){
-                    moveCards(deck, 0, function (){
-                        moveCards(discard, 250, function(){
-                            $(".card").click(function(event){
-                                cardClick(event, players, discard, deck);
-                            })
-                        })
-                    })
-                });
-            });
-        });
-
-    </script>
 </body>
 </html>
