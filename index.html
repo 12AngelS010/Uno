@@ -430,9 +430,9 @@
         var card = findCard(player.hand, id);
         // if card found: then action, player select
         if (card != null) {
-            $(".card").unbind("click");
-
             if (isValidMove(card, discard[0])) {
+                $(".card").unbind("click");
+
                 discardCard(card, player, discard, function () {
                     playGame(0, players, discard, deck, function () {
                         $(".card").click(function (event) {
