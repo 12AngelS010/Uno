@@ -369,6 +369,29 @@
         });
     }
 
+        function layoutCardHands (players){
+            players.forEach(function(player){
+                layoutCardHand(player);
+            });
+        }
+
+        function isValidMove(cardA, cardB){
+            if ((cardA.id[0]) == "x"){
+                return true;
+            }
+            if (colours.indexOf(cardA.id[0]) != -1){
+                // Simple case are the card colour the same
+                if(cardA.id[0] == cardB.id[0]){
+                    return true;
+                }
+                // simple case are the card numbers the same
+                if(cardA.id[1] == cardB.id[1]){
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
     function isValidMove(cardA, cardB){
         if ((cardA.id[0]) == "x"){
             return true;
@@ -426,6 +449,22 @@
             })
         });
     }
+        function discardCard (card, player, discard, callback){
+            var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
+            discard.unshift(card);
+
+            $("#" + selectedCard.id).css("z-index", 2000);
+            layoutCardStack(discard, "#discard");
+            layoutCardHand(player);
+
+            moveCards([selectedCard], 250, function (){
+                moveCards(discard, 0, function(){
+                    moveCards(player.hand, 100, function(){
+                        callback();
+                    })
+                })
+            });
+        }
 
     function selectFromDeck (player ,deck, callback){
         // force card selection to be top of the deck
@@ -457,6 +496,34 @@
                             cardClick(event, players, discard, deck);
                         });
                     })
+        function selectFromDeck (card, player ,deck, callback){
+            // force card selection to be top of the deck
+            var selectedCard = deck.shift();
+            player.hand.push(selectedCard);
+            layoutCardStack(deck, "#deck");
+            layoutCardHand(player);
+            moveCards([selectedCard], 250, function (){
+                moveCards(deck, 0, function () {
+                    moveCards (player.hand, 100, function() {
+                        callback();
+                    })
+                })
+            })
+
+        }
+        function cardClick (event, players, discard, deck){
+            $(".card").unbind("click");
+            var id = event.currentTarget.id;
+
+            // Search the bottom player hand to see if selected card is in there
+            var player = findPlayer(players,"bottom-player");
+            var card = findCard(player.hand, id);
+            // if card found: then action, player select
+            if(card != null) {
+                discardCard(card, player, discard, function(){
+                    $(".card").click(function(event){
+                        cardClick(event, players, discard, deck);
+                    });
                 });
             } else {
                 $(".card").click(function (event) {
@@ -547,5 +614,37 @@
         });
     });
 </script>
+            deck = shuffle(deck);
+            layoutCardStack( deck, "#deck");
+            moveCards(deck, 0, function(){});
+            $("#deal-button").show();
+
+
+            $("#deal-button").click(function(){
+                $("#deal-button").hide();
+
+                var cards = dealCards(deck, players, 7);
+
+                var card = deck.shift();
+                card.faceup = true;
+                discard.push(card);
+
+                layoutCardHands(players);
+                layoutCardStack(discard, "#discard");
+                layoutCardStack(deck, "#deck");
+
+                moveCards(cards, 250, function (){
+                    moveCards(deck, 0, function (){
+                        moveCards(discard, 250, function(){
+                            $(".card").click(function(event){
+                                cardClick(event, players, discard, deck);
+                            })
+                        })
+                    })
+                });
+            });
+        });
+
+    </script>
 </body>
 </html>
