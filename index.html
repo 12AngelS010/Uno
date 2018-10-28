@@ -423,7 +423,6 @@
     }
 
     function cardClick(event, players, discard, deck) {
-        $(".card").unbind("click");
 
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
@@ -431,6 +430,8 @@
         var card = findCard(player.hand, id);
         // if card found: then action, player select
         if (card != null) {
+            $(".card").unbind("click");
+
             if (isValidMove(card, discard[0])) {
                 discardCard(card, player, discard, function () {
                     playGame(0, players, discard, deck, function () {
@@ -443,6 +444,8 @@
         } else {
             card = findCard(deck, id);
             if(card != null){
+                $(".card").unbind("click");
+
                 selectFromDeck(player, deck, function(){
                     playGame(0, players, discard, deck, function(){
                         $(".card").click(function (event) {
@@ -462,7 +465,7 @@
         layoutCardStack(deck, "#deck", false);
         layoutCardHand(player);
 
-        moveCards([selectedCard], 250, function () {
+        moveCards([selectedCard], 500, function () {
             moveCards(deck, 0, function () {
                 moveCards(player.hand, 100, function () {
                     callback();
