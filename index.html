@@ -63,34 +63,10 @@
         font-size: 30px;
     }
 
-    .page-header {
-        margin: 20px 0 20px;
-        padding-bottom: 0px;
-    }
-
     #help-link {
         float: right;
         font-size: 15px;
         align: middle;
-    }
-
-    .vline {
-        position: absolute;
-        background-color: black;
-        width: 1px;
-        height: 100%;
-        left: 50%;
-        top: 0%;
-    }
-
-    .hline {
-        position: absolute;
-        width: 1px;
-        height: 100%;
-        left: 50%;
-        top: 0;
-        background-color: black;
-        transform: rotate(90deg);
     }
 
 </style>
@@ -112,7 +88,7 @@
     <div id="discard"></div>
 
     <div id="deal-button">
-        <button class="btn btn-danger btn-lg">Deal</button>
+        <button type="button" class="btn btn-danger btn-lg">Deal</button>
     </div>
 </div>
 
@@ -171,7 +147,8 @@
             zindex: 0,
             front: idToImage(id),
             back: "images/back.png",
-            faceup: false
+            faceup: false,
+            size: 70
         }
     }
 
@@ -238,14 +215,6 @@
     function showCard(card) {
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
-        /*
-        var src = card.faceup ? card.front : card.back;
-        if($("#" + card.id).attr("src") != src) {
-            $("#" + card.id).fadeOut(function () {
-                $(this).attr('src', src).fadeIn();
-            });
-        };
-        */
     }
 
     function animate(list, delay, callback) {
@@ -337,6 +306,7 @@
         var position = div.position();
         var offset = 0;
         var zindex = cards.length;
+
         cards.forEach(function (card) {
             card.left = position.left - offset;
             card.top = position.top - offset;
@@ -452,25 +422,9 @@
         });
     }
 
-    function selectFromDeck(player, deck, callback) {
-        // force card selection to be top of the deck
-        var selectedCard = deck.shift();
-        player.hand.push(selectedCard);
-
-        layoutCardStack(deck, "#deck", false);
-        layoutCardHand(player);
-
-        moveCards([selectedCard], 250, function () {
-            moveCards(player.hand, 50, function () {
-                moveCards(deck, 0, function () {
-                    callback();
-                })
-            })
-        })
-    }
-
     function cardClick(event, players, discard, deck) {
         $(".card").unbind("click");
+
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
         var player = findPlayer(players, "bottom-player");
@@ -486,16 +440,28 @@
                     })
                 })
             }
+        } else {
+            card = findCard(deck, id);
+            if(card != null){
+                selectFromDeck(player, deck, function(){
+                    playGame(0, players, discard, deck, function(){
+                        $(".card").click(function (event) {
+                            cardClick(event, players, discard, deck);
+                        });
+                    })
+                })
+            }
         }
     }
 
-
-    function selectFromDeck(card, player, deck, callback) {
+    function selectFromDeck(player, deck, callback) {
         // force card selection to be top of the deck
         var selectedCard = deck.shift();
+
         player.hand.push(selectedCard);
-        layoutCardStack(deck, "#deck");
+        layoutCardStack(deck, "#deck", false);
         layoutCardHand(player);
+
         moveCards([selectedCard], 250, function () {
             moveCards(deck, 0, function () {
                 moveCards(player.hand, 100, function () {
@@ -513,7 +479,12 @@
         var tableHeight = Math.min(700, height);
 
         var cardWidth = 70;
+        var smallCardWidth = 70;
         var cardHeight = 105;
+
+        if(tableWidth < 700){
+            smallCardWidth = 50;
+        }
 
         var headerOffset = 133;
 
@@ -546,7 +517,7 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: 50
+            size: smallCardWidth
         });
         players.push({
             hand: [],
@@ -555,7 +526,7 @@
             offsetTop: 0,
             offsetLeft: 15,
             faceup: false,
-            size: 50
+            size: smallCardWidth
         });
         players.push({
             hand: [],
@@ -564,7 +535,7 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: 50
+            size: smallCardWidth
         });
         players.push({
             hand: [],
@@ -573,7 +544,7 @@
             offsetTop: 0,
             offsetLeft: 25,
             faceup: true,
-            size: 70
+            size: cardWidth
         });
 
         // put the cards initially in their own div area
