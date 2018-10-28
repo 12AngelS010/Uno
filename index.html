@@ -361,6 +361,12 @@
             });
         }
 
+        function layoutCardHands (players){
+            players.forEach(function(player){
+                layoutCardHand(player);
+            });
+        }
+
         function isValidMove(cardA, cardB){
             if ((cardA.id[0]) == "x"){
                 return true;
@@ -400,8 +406,8 @@
             layoutCardHand(player);
 
             moveCards([selectedCard], 250, function (){
-                moveCards(player.hand, 100, function(){
-                    moveCards(discard, 0, function(){
+                moveCards(discard, 0, function(){
+                    moveCards(player.hand, 100, function(){
                         callback();
                     })
                 })
@@ -415,8 +421,8 @@
             layoutCardStack(deck, "#deck");
             layoutCardHand(player);
             moveCards([selectedCard], 250, function (){
-                moveCards (player.hand, 100, function() {
-                    moveCards(deck, 0, function () {
+                moveCards(deck, 0, function () {
+                    moveCards (player.hand, 100, function() {
                         callback();
                     })
                 })
@@ -475,20 +481,17 @@
 
                 var cards = dealCards(deck, players, 7);
 
-                players.forEach(function(player){
-                    layoutCardHand(player);
-                });
-
                 var card = deck.shift();
                 card.faceup = true;
                 discard.push(card);
 
+                layoutCardHands(players);
                 layoutCardStack(discard, "#discard");
                 layoutCardStack(deck, "#deck");
 
-                moveCards(cards, 50, function (){
-                    moveCards(discard, 250, function(){
-                        moveCards(deck, 0, function (){
+                moveCards(cards, 250, function (){
+                    moveCards(deck, 0, function (){
+                        moveCards(discard, 250, function(){
                             $(".card").click(function(event){
                                 cardClick(event, players, discard, deck);
                             })
