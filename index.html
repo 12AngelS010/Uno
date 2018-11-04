@@ -49,6 +49,12 @@
         display: none;
     }
 
+    .message {
+        position: absolute;
+        display: none;
+        text-align: center;
+    }
+
     img {
         position: absolute;
     }
@@ -60,20 +66,41 @@
 
     h1 {
         color: White;
-        font-size: 30px;
+        font-size: 25px;
+        margin-top: 10px;
+        margin-left: 10px;
     }
 
     #help-link {
         float: right;
         font-size: 15px;
-        align: middle;
+        padding-top: 10px;
+        margin-right: 10px;
+    }
+
+    .vl {
+        border-left: 1px solid black;
+        height: 100%;
+        position: absolute;
+        left: 50%;
+        top: 0;
+    }
+
+    .hl {
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        padding: 0;
+        margin: 0;
     }
 
 </style>
 <body>
+<!--<hr id="hr" class="hl">-->
+<!--<div class="vl"></div>-->
+
 <div>
-    <h1>UNO Card Game</h1>
-    <a href="https://www.unorules.com" id="help-link">Official Rules</a>
+    <h1>UNO Card Game<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
 </div>
 
 <div id="cards"></div>
@@ -88,8 +115,10 @@
     <div id="discard"></div>
 
     <button id="deal-button" class="btn btn-danger btn-lg button">Deal</button>
-    <button id="sort-button" class="btn btn-default btn-sm button">Sort</button>
-    <button id="hint-button" class="btn btn-default btn-sm button">Hint</button>
+    <button id="sort-button" class="btn btn-info btn-sm button">Sort</button>
+    <button id="hint-button" class="btn btn-warning btn-sm button">Hint</button>
+
+    <div id="message-box" class="alert alert-warning message">&nbsp;</div>
 </div>
 
 <script>
@@ -243,7 +272,7 @@
     function moveCards(cards, delay, callback) {
         var animations = [];
         cards.forEach(function (card) {
-            var css = {left: card.left + "px", top: card.top + "px", width: card.size, height: "auto"};
+            var css = {left: card.left + "px", top: card.top + "px", width: card.width, height: "auto"};
             if (delay == 0) {
                 $("#" + card.id).css(css);
                 showCard(card);
@@ -312,7 +341,7 @@
             card.top = position.top - offset;
             card.zindex = zindex;
             card.faceup = faceup;
-            card.size = 70;
+            card.width = 70;
             zindex--;
             offset -= 2;
             offset = Math.max(-10, offset);
@@ -322,22 +351,32 @@
     function layoutCardHand(player) {
         var div = $("#" + player.div);
         var position = div.position();
+
         var offsetLeft = 0;
         var offsetTop = 0;
         var zindex = 0;
+
         var count = player.hand.length;
-        var adjleft = player.offsetLeft * count / 2;
-        var adjtop = player.offsetTop * count / 2;
-        if (player.sort){
+        count--; // zero based
+
+        var adjleft = player.offsetLeft * count / 2 + player.width / 2;
+        var adjtop = player.offsetTop * count / 2 + player.height / 2;
+
+        if (player.sort) {
             sort(player.hand);
         }
+
         player.hand.forEach(function (card) {
             card.left = position.left + offsetLeft - adjleft;
             card.top = position.top + offsetTop - adjtop;
             card.zindex = zindex;
             card.faceup = player.faceup;
-            card.size = player.size;
+            card.width = player.width;
+
+            // add depth
             zindex++;
+
+            // add offset
             offsetLeft += player.offsetLeft;
             offsetTop += player.offsetTop;
         });
@@ -437,6 +476,8 @@
 
                 discardCard(card, player, discard, function () {
                     playGame(0, players, discard, deck, function () {
+                        message("Your turn");
+
                         $(".card").click(function (event) {
                             cardClick(event, players, discard, deck);
                         });
@@ -445,11 +486,13 @@
             }
         } else {
             card = findCard(deck, id);
-            if(card != null){
+            if (card != null) {
                 $(".card").unbind("click");
 
-                selectFromDeck(player, deck, function(){
-                    playGame(0, players, discard, deck, function(){
+                selectFromDeck(player, deck, function () {
+                    playGame(0, players, discard, deck, function () {
+                        message("Your turn");
+
                         $(".card").click(function (event) {
                             cardClick(event, players, discard, deck);
                         });
@@ -459,23 +502,32 @@
         }
     }
 
-    function hint (){
+    function hint() {
     }
 
-    function sort (cards){
-        cards.sort(function(item1, item2){
+    function sort(cards) {
+        cards.sort(function (item1, item2) {
             if (item1.id < item2.id)
                 return -1;
-            if ( item1.id > item2.id)
+            if (item1.id > item2.id)
                 return 1;
             return 0;
         });
     }
 
-    function calculateCard (){
+    function calculateCard() {
     }
 
-    function message (){
+    // only want one timer running and we need to be able to cancel it
+    var globalTimer = null;
+    function message(text) {
+        $("#message-box").html(text);
+
+        if (globalTimer) {
+            clearTimeout(globalTimer); //cancel the previous timer.
+            globalTimer = null;
+        }
+        globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 5000);
     }
 
     function selectFromDeck(player, deck, callback) {
@@ -495,43 +547,93 @@
         })
     }
 
+    function dealOutCards(deck, players, discard) {
+        $("#deal-button").hide();
+        var cards = dealCards(deck, players, 7);
+        players.forEach(function (player) {
+            layoutCardHand(player);
+        });
+        var card = deck.shift();
+        card.faceup = true;
+        discard.push(card);
+        layoutCardStack(discard, "#discard", true);
+        layoutCardStack(deck, "#deck", false);
+        moveCards(cards, 250, function () {
+            moveCards(discard, 250, function () {
+                moveCards(deck, 0, function () {
+
+                    // now show the sort, hint and message objects
+                    $("#sort-button").show();
+                    $("#hint-button").show();
+                    $("#message-box").show();
+
+                    message("Your turn");
+
+                    $(".card").click(function (event) {
+                        cardClick(event, players, discard, deck);
+                    })
+                })
+            })
+        });
+    }
+
     $(document).ready(function () {
+
         var width = $(window).width();
         var height = $(window).height();
+        var minTable = 700;
 
-        var tableWidth = Math.min(700, width);
-        var tableHeight = Math.min(700, height);
+        var maxTableWidth = Math.min(minTable, width);
+        var maxTableHeight = Math.min(minTable, height);
 
         var cardWidth = 70;
-        var smallCardWidth = 70;
         var cardHeight = 105;
 
-        if(tableWidth < 700){
+        var smallCardWidth = cardWidth;
+        var smallCardHeight = cardHeight;
+
+        if (maxTableWidth < minTable) {
             smallCardWidth = 50;
+            smallCardHeight = 78;
         }
 
-        var headerOffset = 133;
+        var headerOffset = 150;
+        var topOffSet = headerOffset + 150;
 
-        $("#top-player").css("left", width / 2 - cardWidth / 2 + "px");
-        $("#bottom-player").css("left", width / 2 - cardWidth / 2 + "px");
-        $("#left-player").css("left", (width / 2 - tableWidth / 2) + 20 + "px");
-        $("#right-player").css("left", (width / 2 + tableWidth / 2) - cardWidth + "px");
+        var tableHorizontalMiddle = width / 2;
+        var tableVerticalMiddle = maxTableHeight / 2;
 
-        $("#deck").css("left", width / 2 - cardWidth - 10 + "px");
-        $("#discard").css("left", width / 2 + 10 + "px");
+        $("#top-player").css("left", tableHorizontalMiddle + "px");
+        $("#top-player").css("top", headerOffset + "px");
 
-        $("#top-player").css("top", headerOffset + 20 + "px");
-        $("#bottom-player").css("top", tableHeight - cardHeight + "px");
-        $("#left-player").css("top", tableHeight / 2 + "px");
-        $("#right-player").css("top", tableHeight / 2 + "px");
+        $("#bottom-player").css("left", tableHorizontalMiddle + "px");
+        $("#bottom-player").css("top", maxTableHeight - cardHeight + "px");
 
-        $("#deck").css("top", tableHeight / 2 + "px");
-        $("#discard").css("top", tableHeight / 2 + "px");
+        $("#left-player").css("left", (tableHorizontalMiddle - maxTableWidth / 2) + smallCardWidth + "px");
+        $("#left-player").css("top", topOffSet + "px");
 
-        $("#deal-button").css("left", width / 2 + cardWidth / 2 + "px");
-        $("#deal-button").css("top", tableHeight / 2 + cardHeight / 4 + "px");
-        $("#sort-button").css("left", width / 2 + "px");
-        $("#sort-button").css("top", tableHeight + 10 + "px");
+        $("#right-player").css("left", (tableHorizontalMiddle + maxTableWidth / 2) - smallCardWidth + "px");
+        $("#right-player").css("top", topOffSet + "px");
+
+        $("#deck").css("left", tableHorizontalMiddle - cardWidth - 10 + "px");
+        $("#deck").css("top", topOffSet - 50 + "px");
+
+        $("#discard").css("left", tableHorizontalMiddle + 10 + "px");
+        $("#discard").css("top", topOffSet - 50 + "px");
+
+        $("#hint-button").css("left", tableHorizontalMiddle - 60 + "px");
+        $("#hint-button").css("top", maxTableHeight - cardHeight / 3 + "px");
+
+        $("#sort-button").css("left", tableHorizontalMiddle + 20 + "px");
+        $("#sort-button").css("top", maxTableHeight - cardHeight / 3 + "px");
+
+        var messageWidth = Math.min(maxTableWidth, 300);
+        $("#message-box").css("width", messageWidth + "px");
+        $("#message-box").css("left", tableHorizontalMiddle - messageWidth / 2 + "px");
+        $("#message-box").css("top", maxTableHeight - 2 * cardHeight - 20 + "px");
+
+        $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
+        $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
 
         var discard = [];
         var deck = createDeck();
@@ -544,9 +646,11 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: 50,
+            width: smallCardWidth,
+            height: smallCardHeight,
             sort: false
         });
+
         players.push({
             hand: [],
             name: "Sam",
@@ -554,9 +658,11 @@
             offsetTop: 0,
             offsetLeft: 15,
             faceup: false,
-            size: 50,
+            width: smallCardWidth,
+            height: smallCardHeight,
             sort: false
         });
+
         players.push({
             hand: [],
             name: "Emily",
@@ -564,9 +670,11 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: 50,
+            width: smallCardWidth,
+            height: smallCardHeight,
             sort: false
         });
+
         players.push({
             hand: [],
             name: "Barney",
@@ -574,7 +682,8 @@
             offsetTop: 0,
             offsetLeft: 25,
             faceup: true,
-            size: 70,
+            width: cardWidth,
+            height: cardHeight,
             sort: false
         });
 
@@ -587,35 +696,19 @@
         });
 
         $("#deal-button").show();
+
+        //dealOutCards(deck, players, discard);
+
         $("#deal-button").click(function () {
-            $("#deal-button").hide();
-            var cards = dealCards(deck, players, 7);
-            players.forEach(function (player) {
-                layoutCardHand(player);
-            });
-            var card = deck.shift();
-            card.faceup = true;
-            discard.push(card);
-            layoutCardStack(discard, "#discard", true);
-            layoutCardStack(deck, "#deck", false);
-            moveCards(cards, /*250*/0, function () {
-                moveCards(discard, /*250*/0, function () {
-                    moveCards(deck, 0, function () {
-                        // now show the sort button
-                        $("#sort-button").show();
-                        $(".card").click(function (event) {
-                            cardClick(event, players, discard, deck);
-                        })
-                    })
-                })
-            });
+            dealOutCards(deck, players, discard)
         });
 
         $("#sort-button").click(function () {
             var player = findPlayer(players, "bottom-player");
             player.sort = true;
             layoutCardHand(player);
-            moveCards(player.hand, 250, function () {});
+            moveCards(player.hand, 250, function () {
+            });
         });
     })
 
