@@ -44,7 +44,7 @@
         position: absolute;
     }
 
-    #deal-button {
+    .button {
         position: absolute;
         display: none;
     }
@@ -63,10 +63,34 @@
         font-size: 30px;
     }
 
+    .page-header {
+        margin: 20px 0 20px;
+        padding-bottom: 0px;
+    }
+
     #help-link {
         float: right;
         font-size: 15px;
         align: middle;
+    }
+
+    .vline {
+        position: absolute;
+        background-color: black;
+        width: 1px;
+        height: 100%;
+        left: 50%;
+        top: 0%;
+    }
+
+    .hline {
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        left: 50%;
+        top: 0;
+        background-color: black;
+        transform: rotate(90deg);
     }
 
 </style>
@@ -87,9 +111,9 @@
     <div id="deck"></div>
     <div id="discard"></div>
 
-    <div id="deal-button">
-        <button type="button" class="btn btn-danger btn-lg">Deal</button>
-    </div>
+    <button id="deal-button" class="btn btn-danger btn-lg button">Deal</button>
+    <button id="sort-button" class="btn btn-default btn-sm button">Sort</button>
+    <button id="hint-button" class="btn btn-default btn-sm button">Hint</button>
 </div>
 
 <script>
@@ -147,8 +171,7 @@
             zindex: 0,
             front: idToImage(id),
             back: "images/back.png",
-            faceup: false,
-            size: 70
+            faceup: false
         }
     }
 
@@ -215,6 +238,14 @@
     function showCard(card) {
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
+        /*
+        var src = card.faceup ? card.front : card.back;
+        if($("#" + card.id).attr("src") != src) {
+            $("#" + card.id).fadeOut(function () {
+                $(this).attr('src', src).fadeIn();
+            });
+        };
+        */
     }
 
     function animate(list, delay, callback) {
@@ -306,7 +337,6 @@
         var position = div.position();
         var offset = 0;
         var zindex = cards.length;
-
         cards.forEach(function (card) {
             card.left = position.left - offset;
             card.top = position.top - offset;
@@ -328,6 +358,9 @@
         var count = player.hand.length;
         var adjleft = player.offsetLeft * count / 2;
         var adjtop = player.offsetTop * count / 2;
+        if (player.sort){
+            sort(player.hand);
+        }
         player.hand.forEach(function (card) {
             card.left = position.left + offsetLeft - adjleft;
             card.top = position.top + offsetTop - adjtop;
@@ -422,8 +455,25 @@
         });
     }
 
-    function cardClick(event, players, discard, deck) {
+    function selectFromDeck(player, deck, callback) {
+        // force card selection to be top of the deck
+        var selectedCard = deck.shift();
+        player.hand.push(selectedCard);
 
+        layoutCardStack(deck, "#deck", false);
+        layoutCardHand(player);
+
+        moveCards([selectedCard], 250, function () {
+            moveCards(player.hand, 50, function () {
+                moveCards(deck, 0, function () {
+                    callback();
+                })
+            })
+        })
+    }
+
+    function cardClick(event, players, discard, deck) {
+        $(".card").unbind("click");
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
         var player = findPlayer(players, "bottom-player");
@@ -431,8 +481,6 @@
         // if card found: then action, player select
         if (card != null) {
             if (isValidMove(card, discard[0])) {
-                $(".card").unbind("click");
-
                 discardCard(card, player, discard, function () {
                     playGame(0, players, discard, deck, function () {
                         $(".card").click(function (event) {
@@ -441,31 +489,17 @@
                     })
                 })
             }
-        } else {
-            card = findCard(deck, id);
-            if(card != null){
-                $(".card").unbind("click");
-
-                selectFromDeck(player, deck, function(){
-                    playGame(0, players, discard, deck, function(){
-                        $(".card").click(function (event) {
-                            cardClick(event, players, discard, deck);
-                        });
-                    })
-                })
-            }
         }
     }
 
-    function selectFromDeck(player, deck, callback) {
+
+    function selectFromDeck(card, player, deck, callback) {
         // force card selection to be top of the deck
         var selectedCard = deck.shift();
-
         player.hand.push(selectedCard);
-        layoutCardStack(deck, "#deck", false);
+        layoutCardStack(deck, "#deck");
         layoutCardHand(player);
-
-        moveCards([selectedCard], 500, function () {
+        moveCards([selectedCard], 250, function () {
             moveCards(deck, 0, function () {
                 moveCards(player.hand, 100, function () {
                     callback();
@@ -474,20 +508,35 @@
         })
     }
 
+
+    function hint (){
+
+    }
+    function sort (cards){
+        cards.sort(function(item1, item2){
+            if (item1.id < item2.id)
+                return -1;
+            if ( item1.id > item2.id)
+                return 1;
+            return 0;
+        });
+    }
+    function calculateCard (){
+
+    }
+    function message (){
+
+    }
+
     $(document).ready(function () {
         var width = $(window).width();
         var height = $(window).height();
 
         var tableWidth = Math.min(700, width);
-        var tableHeight = Math.min(700, height);
+        var tableHeight = Math.min(500, height);
 
         var cardWidth = 70;
-        var smallCardWidth = 70;
         var cardHeight = 105;
-
-        if(tableWidth < 700){
-            smallCardWidth = 50;
-        }
 
         var headerOffset = 133;
 
@@ -498,7 +547,6 @@
 
         $("#deck").css("left", width / 2 - cardWidth - 10 + "px");
         $("#discard").css("left", width / 2 + 10 + "px");
-        $("#deal-button").css("left", width / 2 + cardWidth / 2 + "px");
 
         $("#top-player").css("top", headerOffset + 20 + "px");
         $("#bottom-player").css("top", tableHeight - cardHeight + "px");
@@ -507,7 +555,13 @@
 
         $("#deck").css("top", tableHeight / 2 + "px");
         $("#discard").css("top", tableHeight / 2 + "px");
+
+        $("#deal-button").css("left", width / 2 + cardWidth / 2 + "px");
         $("#deal-button").css("top", tableHeight / 2 + cardHeight / 4 + "px");
+
+        $("#sort-button").css("left", width / 2 + "px");
+        $("#sort-button").css("top", tableHeight + 10 + "px");
+
 
         var discard = [];
         var deck = createDeck();
@@ -520,7 +574,8 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: smallCardWidth
+            size: 50,
+            sort: false
         });
         players.push({
             hand: [],
@@ -529,7 +584,8 @@
             offsetTop: 0,
             offsetLeft: 15,
             faceup: false,
-            size: smallCardWidth
+            size: 50,
+            sort: false
         });
         players.push({
             hand: [],
@@ -538,7 +594,8 @@
             offsetTop: 15,
             offsetLeft: 0,
             faceup: false,
-            size: smallCardWidth
+            size: 50,
+            sort: false
         });
         players.push({
             hand: [],
@@ -547,7 +604,8 @@
             offsetTop: 0,
             offsetLeft: 25,
             faceup: true,
-            size: cardWidth
+            size: 70,
+            sort: false
         });
 
         // put the cards initially in their own div area
@@ -556,6 +614,13 @@
         deck = shuffle(deck);
         layoutCardStack(deck, "#deck", false);
         moveCards(deck, 0, function () {
+        });
+
+        $("#sort-button").click(function () {
+            var player = findPlayer(players, "bottom-player");
+            player.sort = true;
+            layoutCardHand(player);
+            moveCards(player.hand, 250, function () {});
         });
 
         $("#deal-button").show();
@@ -574,6 +639,7 @@
             moveCards(cards, 250, function () {
                 moveCards(discard, 250, function () {
                     moveCards(deck, 0, function () {
+                        $("#sort-button").show();
                         $(".card").click(function (event) {
                             cardClick(event, players, discard, deck);
                         })
