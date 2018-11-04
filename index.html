@@ -500,7 +500,7 @@
         var height = $(window).height();
 
         var tableWidth = Math.min(700, width);
-        var tableHeight = Math.min(500, height);
+        var tableHeight = Math.min(700, height);
 
         var cardWidth = 70;
         var smallCardWidth = 70;
@@ -598,8 +598,8 @@
             discard.push(card);
             layoutCardStack(discard, "#discard", true);
             layoutCardStack(deck, "#deck", false);
-            moveCards(cards, 250, function () {
-                moveCards(discard, 250, function () {
+            moveCards(cards, /*250*/0, function () {
+                moveCards(discard, /*250*/0, function () {
                     moveCards(deck, 0, function () {
                         // now show the sort button
                         $("#sort-button").show();
