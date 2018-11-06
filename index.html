@@ -229,18 +229,6 @@
         });
     }
 
-    function showCards(cards) {
-        cards.forEach(function (card) {
-            $("#" + card.id).show();
-        })
-    }
-
-    function hideCards(cards) {
-        cards.forEach(function (card) {
-            $("#" + card.id).hide();
-        })
-    }
-
     function showCard(card) {
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
@@ -382,30 +370,6 @@
         });
     }
 
-    function layoutCardHands(players) {
-        players.forEach(function (player) {
-            layoutCardHand(player);
-        });
-    }
-
-    function isValidMove(cardA, cardB) {
-        if ((cardA.id[0]) == "x") {
-            return true;
-        }
-        if (colours.indexOf(cardA.id[0]) != -1) {
-            // Simple case are the card colour the same
-            if (cardA.id[0] == cardB.id[0]) {
-                return true;
-            }
-            // simple case are the card numbers the same
-            if (cardA.id[1] == cardB.id[1]) {
-                return true;
-            }
-            return false;
-        }
-        return false;
-    }
-
     function isValidMove(cardA, cardB) {
         if ((cardA.id[0]) == "x") {
             return true;
@@ -520,6 +484,7 @@
 
     // only want one timer running and we need to be able to cancel it
     var globalTimer = null;
+
     function message(text) {
         $("#message-box").html(text);
 
@@ -527,7 +492,7 @@
             clearTimeout(globalTimer); //cancel the previous timer.
             globalTimer = null;
         }
-        globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 5000);
+        globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 7500);
     }
 
     function selectFromDeck(player, deck, callback) {
@@ -558,8 +523,8 @@
         discard.push(card);
         layoutCardStack(discard, "#discard", true);
         layoutCardStack(deck, "#deck", false);
-        moveCards(cards, 250, function () {
-            moveCards(discard, 250, function () {
+        moveCards(cards, 150, function () {
+            moveCards(discard, 150, function () {
                 moveCards(deck, 0, function () {
 
                     // now show the sort, hint and message objects
@@ -630,7 +595,7 @@
         var messageWidth = Math.min(maxTableWidth, 300);
         $("#message-box").css("width", messageWidth + "px");
         $("#message-box").css("left", tableHorizontalMiddle - messageWidth / 2 + "px");
-        $("#message-box").css("top", maxTableHeight - 2 * cardHeight - 20 + "px");
+        $("#message-box").css("top", maxTableHeight - 2 * cardHeight - 25 + "px");
 
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
         $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
@@ -701,6 +666,11 @@
 
         $("#deal-button").click(function () {
             dealOutCards(deck, players, discard)
+        });
+
+        $("#hint-button").click(function () {
+            if()
+            message("Try match the colour and number of your cards with the card on the discard pile.");
         });
 
         $("#sort-button").click(function () {
