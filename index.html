@@ -117,7 +117,7 @@
     <button id="deal-button"  class="btn btn-danger btn-lg button">Deal</button>
     <button id="sort-button" style="width:50px" class="btn btn-info btn-sm button">Sort</button>
     <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
-    <button id="uno-button" style="width:50px" class="btn btn-danger btn-sm button">Uno</button>
+    <button id="uno-button" style="width:50px" class="btn btn-danger  btn-sm button">Uno</button>
 
 
     <div id="message-box" class="alert alert-warning message">&nbsp;</div>
@@ -179,7 +179,12 @@
             front: idToImage(id),
             back: "images/back.png",
             faceup: false,
-            size: 70
+            size: 70,
+            consequence: {
+                pickUp: 0,
+                reverse: false,
+                skip: false
+            }
         }
     }
 
@@ -196,8 +201,24 @@
             }
             special.forEach(function (character) {
                 // There are two special cards per colour
-                deck.push(createCard(colour + character + "0"));
-                deck.push(createCard(colour + character + "1"));
+                ["0","1"].forEach(function(number){
+                    var card = createCard(colour + character + number);
+                    switch(character){
+                        case "s":
+                            card.consequence.skip = true;
+                            break;
+                        case "r":
+                            card.consequence.reverse = true;
+                            break;
+                        case "p":
+                            card.consequence.pickUp = 2;
+                            break;
+                    }
+                    deck.push(card);
+
+                });
+                //deck.push(createCard(colour + character + "0"));
+                //deck.push(createCard(colour + character + "1"));
             });
         });
         //insert black cards
@@ -430,7 +451,7 @@
         });
     }
 
-    function cardClick(event, players, discard, deck) {
+    function cardClick(event, consequence, players, discard, deck) {
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
         var player = findPlayer(players, "bottom-player");
@@ -538,6 +559,11 @@
                     message("Your turn");
 
                     $(".card").click(function (event) {
+                        var consequence = {
+                            pickUp: 0,
+                            reverse: false,
+                            skip: false
+                        }
                         cardClick(event, players, discard, deck);
                     })
                 })
