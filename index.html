@@ -100,7 +100,7 @@
 <!--<div class="vl"></div>-->
 
 <div>
-    <h1>UNO Card Game<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
+    <h1>UNO<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
 </div>
 
 <div id="cards"></div>
@@ -114,9 +114,11 @@
     <div id="deck"></div>
     <div id="discard"></div>
 
-    <button id="deal-button" class="btn btn-danger btn-lg button">Deal</button>
-    <button id="sort-button" class="btn btn-info btn-sm button">Sort</button>
-    <button id="hint-button" class="btn btn-warning btn-sm button">Hint</button>
+    <button id="deal-button"  class="btn btn-danger btn-lg button">Deal</button>
+    <button id="sort-button" style="width:50px" class="btn btn-info btn-sm button">Sort</button>
+    <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
+    <button id="uno-button" style="width:50px" class="btn btn-danger btn-sm button">Uno</button>
+
 
     <div id="message-box" class="alert alert-warning message">&nbsp;</div>
 </div>
@@ -528,9 +530,10 @@
                 moveCards(deck, 0, function () {
 
                     // now show the sort, hint and message objects
-                    $("#sort-button").show();
-                    $("#hint-button").show();
                     $("#message-box").show();
+                    $("#hint-button").show();
+                    $("#sort-button").show();
+                    $("#uno-button").show();
 
                     message("Your turn");
 
@@ -562,8 +565,8 @@
             smallCardHeight = 78;
         }
 
-        var headerOffset = 150;
-        var topOffSet = headerOffset + 150;
+        var headerOffset = 75;
+        var topOffSet = headerOffset + 130;
 
         var tableHorizontalMiddle = width / 2;
         var tableVerticalMiddle = maxTableHeight / 2;
@@ -586,11 +589,14 @@
         $("#discard").css("left", tableHorizontalMiddle + 10 + "px");
         $("#discard").css("top", topOffSet - 50 + "px");
 
-        $("#hint-button").css("left", tableHorizontalMiddle - 60 + "px");
+        $("#hint-button").css("left", tableHorizontalMiddle - 110 + "px");
         $("#hint-button").css("top", maxTableHeight - cardHeight / 3 + "px");
 
-        $("#sort-button").css("left", tableHorizontalMiddle + 20 + "px");
+        $("#sort-button").css("left", tableHorizontalMiddle - 25 + "px");
         $("#sort-button").css("top", maxTableHeight - cardHeight / 3 + "px");
+
+        $("#uno-button").css("left", tableHorizontalMiddle + 60 + "px");
+        $("#uno-button").css("top", maxTableHeight - cardHeight / 3 + "px");
 
         var messageWidth = Math.min(maxTableWidth, 300);
         $("#message-box").css("width", messageWidth + "px");
