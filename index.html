@@ -44,6 +44,16 @@
         position: absolute;
     }
 
+    #uno-button {
+        position: absolute;
+        display: none;
+        padding: 0px;
+        border: 1px solid black;
+        border-radius: 3px;
+        width: 45px;
+        height: auto;
+    }
+
     .button {
         position: absolute;
         display: none;
@@ -98,6 +108,7 @@
 <body>
 <!--<hr id="hr" class="hl">-->
 <!--<div class="vl"></div>-->
+<!--<button id="uno-button" style="width:50px" class="btn btn-danger  btn-sm button">Uno</button>-->
 
 <div>
     <h1>UNO<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
@@ -117,8 +128,7 @@
     <button id="deal-button"  class="btn btn-danger btn-lg button">Deal</button>
     <button id="sort-button" style="width:50px" class="btn btn-info btn-sm button">Sort</button>
     <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
-    <button id="uno-button" style="width:50px" class="btn btn-danger  btn-sm button">Uno</button>
-
+    <input type="image" id="uno-button" src="images/uno.png" class="btn btn-default btn-sm button">
 
     <div id="message-box" class="alert alert-warning message">&nbsp;</div>
 </div>
