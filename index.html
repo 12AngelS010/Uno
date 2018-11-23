@@ -179,7 +179,16 @@
         return image;
     }
 
+    function clone (src){
+        return JSON.parse(JSON.stringify(src));
+    }
+
     //create deck of cards
+    var globalEmptyConsequence = {
+            pickUp: 0,
+            reverse: false,
+            skip: false
+        };
     function createCard(id) {
         return {
             id: id,
@@ -190,11 +199,7 @@
             back: "images/back.png",
             faceup: false,
             size: 70,
-            consequence: {
-                pickUp: 0,
-                reverse: false,
-                skip: false
-            }
+            consequence: clone(globalEmptyConsequence)
         }
     }
 
@@ -207,7 +212,7 @@
         // insert all coloured cards
         colours.forEach(function (colour) {
             for (var i = 0; i < 10; i++) {
-                deck.push(createCard(colour + i));
+                //deck.push(createCard(colour + i));
             }
             special.forEach(function (character) {
                 // There are two special cards per colour
@@ -421,11 +426,18 @@
         return false;
     }
 
-    function playGame(index, players, discard, deck, callback) {
+    function playGame(index, consequence, players, discard, deck, callback) {
         var player = players[index];
 
         if (player.div == "bottom-player") {
             callback();
+            return;
+        }
+
+        //check and apply consequence
+        if (consequence.skip){
+            consequence = clone(globalEmptyConsequence);
+            playGame(index + 1, consequence, players, discard, deck, callback);
             return;
         }
 
@@ -434,14 +446,14 @@
             if (!found && isValidMove(card, discard[0])) {
                 found = true;
                 discardCard(card, player, discard, function () {
-                    playGame(index + 1, players, discard, deck, callback)
+                    playGame(index + 1, consequence, players, discard, deck, callback)
                 })
             }
         });
 
         if (!found) {
             selectFromDeck(player, deck, function () {
-                playGame(index + 1, players, discard, deck, callback)
+                playGame(index + 1, consequence, players, discard, deck, callback)
             });
         }
     }
@@ -462,6 +474,14 @@
     }
 
     function cardClick(event, consequence, players, discard, deck) {
+
+        //check and apply consequence
+        if (consequence.skip){
+            consequence = clone(globalEmptyConsequence);
+            playGame(index + 1, consequence, players, discard, deck, callback);
+            return;
+        }
+
         var id = event.currentTarget.id;
         // Search the bottom player hand to see if selected card is in there
         var player = findPlayer(players, "bottom-player");
@@ -472,11 +492,12 @@
                 $(".card").unbind("click");
 
                 discardCard(card, player, discard, function () {
-                    playGame(0, players, discard, deck, function () {
+                    consequence = clone(card.consequence);
+                    playGame(0, consequence, players, discard, deck, function () {
                         message("Your turn");
 
                         $(".card").click(function (event) {
-                            cardClick(event, players, discard, deck);
+                            cardClick(event, consequence, players, discard, deck);
                         });
                     })
                 })
@@ -487,11 +508,11 @@
                 $(".card").unbind("click");
 
                 selectFromDeck(player, deck, function () {
-                    playGame(0, players, discard, deck, function () {
+                    playGame(0, consequence, players, discard, deck, function () {
                         message("Your turn");
 
                         $(".card").click(function (event) {
-                            cardClick(event, players, discard, deck);
+                            cardClick(event, consequence, players, discard, deck);
                         });
                     })
                 })
@@ -574,7 +595,8 @@
                             reverse: false,
                             skip: false
                         }
-                        cardClick(event, players, discard, deck);
+                        var consequence = clone(globalEmptyConsequence);
+                        cardClick(event, consequence, players, discard, deck);
                     })
                 })
             })
@@ -646,17 +668,17 @@
         var deck = createDeck();
         var players = [];
 
-        players.push({
-            hand: [],
-            name: "James",
-            div: "left-player",
-            offsetTop: 15,
-            offsetLeft: 0,
-            faceup: false,
-            width: smallCardWidth,
-            height: smallCardHeight,
-            sort: false
-        });
+        // players.push({
+        //     hand: [],
+        //     name: "James",
+        //     div: "left-player",
+        //     offsetTop: 15,
+        //     offsetLeft: 0,
+        //     faceup: false,
+        //     width: smallCardWidth,
+        //     height: smallCardHeight,
+        //     sort: false
+        // });
 
         players.push({
             hand: [],
