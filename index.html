@@ -189,7 +189,7 @@
             reverse: false,
             skip: false
         };
-    
+
     function createCard(id) {
         return {
             id: id,
@@ -244,7 +244,7 @@
         return deck;
     }
 
-    // Shuffle array in place
+    // Shuffle an array in place
     function shuffle(a) {
         var j, x, i;
         for (i = a.length - 1; i > 0; i--) {
@@ -255,8 +255,19 @@
         }
         return a;
     }
+    // sort cards in place
+    function sortCards(cards) {
+        cards.sort(function (item1, item2) {
+            if (item1.id < item2.id)
+                return -1;
+            if (item1.id > item2.id)
+                return 1;
+            return 0;
+        });
+    }
 
-    function printCards(cards, div) {
+    // place all of the cards in the card div before moving them into hands, deck and discard piles
+    function layoutCardsOnTable(cards, div) {
         cards.forEach(function (card) {
             var image = card.back;
             var html = '<image style="display:none" class="card" id="' + card.id + '" ' +
@@ -267,11 +278,11 @@
         });
     }
 
+    // animation functions
     function showCard(card) {
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
     }
-
     function animate(list, delay, callback) {
         if (list.length == 0) {
             callback();
@@ -294,7 +305,6 @@
             animate(list, delay, callback);
         });
     }
-
     function moveCards(cards, delay, callback) {
         var animations = [];
         cards.forEach(function (card) {
@@ -317,6 +327,7 @@
         }
     }
 
+    // deal number cards out to each player from the deck
     function dealCards(deck, players, number) {
         var cards = [];
         for (var i = 0; i < number; i++) {
@@ -329,6 +340,7 @@
         return cards;
     }
 
+    // find a card by ID in an array of cards
     function findCard(cards, id) {
         var ret = null;
         cards.forEach(function (card) {
@@ -339,16 +351,7 @@
         return ret;
     }
 
-    function findPlayer(players, div) {
-        var ret = null;
-        players.forEach(function (player) {
-            if (player.div == div) {
-                ret = player;
-            }
-        });
-        return ret;
-    }
-
+    // remove a card by ID from an arracy of cards
     function removeCard(cards, id) {
         var ret = null;
         for (var i = cards.length - 1; i >= 0; --i) {
@@ -360,6 +363,18 @@
         return ret;
     }
 
+    // find a player by its html div name
+    function findPlayer(players, div) {
+        var ret = null;
+        players.forEach(function (player) {
+            if (player.div == div) {
+                ret = player;
+            }
+        });
+        return ret;
+    }
+
+    // layout cards in a single stack of cards - face up or down
     function layoutCardStack(cards, name, faceup) {
         var div = $(name);
         var position = div.position();
@@ -377,7 +392,7 @@
             offset = Math.max(-10, offset);
         });
     }
-
+    // layout cards in a hand of cards
     function layoutCardHand(player) {
         var div = $("#" + player.div);
         var position = div.position();
@@ -393,7 +408,7 @@
         var adjtop = player.offsetTop * count / 2 + player.height / 2;
 
         if (player.sort) {
-            sort(player.hand);
+            sortCards(player.hand);
         }
 
         player.hand.forEach(function (card) {
@@ -412,6 +427,7 @@
         });
     }
 
+    // check that 2 cards are a valid match and therefore a valid move
     function isValidMove(cardA, cardB) {
         if ((cardA.id[0]) == "x") {
             return true;
@@ -430,7 +446,8 @@
         return false;
     }
 
-    function findPickUp(hand, number){
+    // find a matching pick up number in the hand or return null
+    function findMatchingPickUpCard(hand, number){
         var ret = null;
         hand.forEach(function(card){
             if(card.consequence.pickUp == number){
@@ -440,14 +457,16 @@
         return ret;
     }
 
-    function logConsequence(consequence){
-        console.log(JSON.stringify(consequence));
+    // given an object log it's contents to the console
+    function logObject(obj){
+        console.log(JSON.stringify(obj));
     }
 
+    // automated turn handling function
     function playGame(index, consequence, players, discard, deck, callback) {
         var player = players[index];
 
-        logConsequence(consequence);
+        logObject(consequence);
 
         if (player.div == "bottom-player") {
             callback(consequence);
@@ -467,7 +486,7 @@
         if (consequence.pickUp != 0){
             // look to see if we have a pick up card - if so play it
             var topDeckCard = discard[0];
-            var card = findPickUp(player.hand, topDeckCard.consequence.pickUp);
+            var card = findMatchingPickUpCard(player.hand, topDeckCard.consequence.pickUp);
             // if we have a pickUp play it
             if(card != null){
                 discardCard(card, player, discard, function (topCard) {
@@ -512,21 +531,7 @@
         }
     }
 
-    function discardCard(card, player, discard, callback) {
-        var selectedCard = removeCard(player.hand, card.id);  //player.hand.shift();
-        discard.unshift(card);
-        $("#" + selectedCard.id).css("z-index", 2000);
-        layoutCardStack(discard, "#discard", true);
-        layoutCardHand(player);
-        moveCards([selectedCard], 500, function () {
-            moveCards(player.hand, 50, function () {
-                moveCards(discard, 0, function () {
-                    callback(card);
-                })
-            })
-        });
-    }
-
+    // human player handling function
     function cardClick(event, myConsequence, players, discard, deck) {
         // find ths player
         var player = findPlayer(players, "bottom-player");
@@ -586,22 +591,13 @@
     function hint() {
     }
 
-    function sort(cards) {
-        cards.sort(function (item1, item2) {
-            if (item1.id < item2.id)
-                return -1;
-            if (item1.id > item2.id)
-                return 1;
-            return 0;
-        });
-    }
-
     function calculateCard() {
     }
 
-    // only want one timer running and we need to be able to cancel it
+    // send a message to the message box and cancel it after a period
+    // we only want one timer running and we need to be able to cancel it
+    // so use a golbal var
     var globalTimer = null;
-
     function message(text) {
         $("#message-box").html(text);
 
@@ -612,9 +608,25 @@
         globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 7500);
     }
 
+    // discard a card from the player's hand to the discard pile
+    function discardCard(card, player, discard, callback) {
+        var selectedCard = removeCard(player.hand, card.id);
+        discard.unshift(card);
+        $("#" + selectedCard.id).css("z-index", 2000);
+        layoutCardStack(discard, "#discard", true);
+        layoutCardHand(player);
+        moveCards([selectedCard], 500, function () {
+            moveCards(player.hand, 50, function () {
+                moveCards(discard, 0, function () {
+                    callback(card);
+                })
+            })
+        });
+    }
+    // select a card from the deck into the player's hand
     function selectFromDeck(player, deck, discard, callback) {
-        logConsequence(deck);
-        logConsequence(discard);
+        logObject(deck);
+        logObject(discard);
         // force card selection to be top of the deck
         var selectedCard = deck.shift();
 
@@ -644,10 +656,11 @@
                 })
             })
         });
-        logConsequence(deck);
-        logConsequence(discard);
+        logObject(deck);
+        logObject(discard);
     }
 
+    // deal out cards to the players from the deck move them into place and animate the move
     function dealOutCards(deck, players, discard) {
         $("#deal-button").hide();
         var cards = dealCards(deck, players, 7);
@@ -681,8 +694,12 @@
         });
     }
 
+    // this is the starting function for jQuery.
+    // Its called when everything has initialised and the program can start
     $(document).ready(function () {
 
+        // set-up all of the divs on the screen by calculating the screen size
+        // this has to be done as mobile, tablet and PCs all have difference screen dimentions
         var width = $(window).width();
         var height = $(window).height();
         var minTable = 700;
@@ -742,10 +759,12 @@
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
         $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
 
+        // create the discard and deck piles
         var discard = [];
         var deck = createDeck();
-        var players = [];
 
+        // create the players array and creat some players
+        var players = [];
         players.push({
             hand: [],
             name: "James",
@@ -757,7 +776,6 @@
             height: smallCardHeight,
             sort: false
         });
-
         players.push({
             hand: [],
             name: "Sam",
@@ -769,7 +787,6 @@
             height: smallCardHeight,
             sort: false
         });
-
         players.push({
             hand: [],
             name: "Emily",
@@ -781,7 +798,6 @@
             height: smallCardHeight,
             sort: false
         });
-
         players.push({
             hand: [],
             name: "Barney",
@@ -795,25 +811,28 @@
         });
 
         // put the cards initially in their own div area
-        printCards(deck, "#cards");
-
+        layoutCardsOnTable(deck, "#cards");
+        // randomly shuffle the deck
         deck = shuffle(deck);
+        // layout the cards into the deck
         layoutCardStack(deck, "#deck", false);
-        moveCards(deck, 0, function () {
-        });
+        // move them into the deck on the table
+        moveCards(deck, 0, function () {});
 
+        // show the deal button so it can be clicked
         $("#deal-button").show();
 
-        //dealOutCards(deck, players, discard);
-
+        // setup the function so that when the player clicks the deal-button it deals out the cards
         $("#deal-button").click(function () {
             dealOutCards(deck, players, discard)
         });
 
+        // setup the function so that when the player clicks the hint button it provides a hint
         $("#hint-button").click(function () {
             message("Try match the colour and number of your cards with the card on the discard pile.");
         });
 
+        // set-up the function so that when the play clicks the sort button their hand is sorted
         $("#sort-button").click(function () {
             var player = findPlayer(players, "bottom-player");
             player.sort = true;
