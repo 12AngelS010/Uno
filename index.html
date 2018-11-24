@@ -601,9 +601,38 @@
                 $(".card").unbind("click");
 
                 discardCard(card, player, discard, function (topCard) {
-                    setTimeout(function(){
-                        playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn)
-                    }, 500);
+                    // special handling for uno button
+                    if(player.hand.length == 1){
+                        var clickUnoButton = false;
+
+                        $("#uno-button").click(function () {
+                            clickUnoButton = true;
+                            message("Uno!");
+                            playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn);
+                            $("#uno-button").unbind("click");
+                        });
+
+                        setTimeout(function(){
+                            $("#uno-button").unbind("click");
+                            if(clickUnoButton){
+                                return;
+                            }
+
+                            console.log(player.div + " picking up 2 cards for not saying uno");
+                                // first card
+                                selectFromDeck(player, deck, discard, function () {
+                                    // second card
+                                    selectFromDeck(player, deck, discard, function () {
+                                        playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn);
+                                    });
+                                });
+                        }, 3000);
+
+                    } else {
+                        setTimeout(function () {
+                            playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn)
+                        }, 500);
+                    }
                 });
             }
         }
