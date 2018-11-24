@@ -486,7 +486,13 @@
     function playGame(index, consequence, players, discard, deck, callback) {
         var player = players[index];
 
-        logObject(consequence);
+        var text = " cards: ";
+        player.hand.forEach(function(card){
+            text += card.id + " ";
+        });
+
+        console.log(player.div + " clockwise: " + globalClockWise + " discard: " + discard[0].id + " consiquence: " + JSON.stringify(consequence) + text);
+
 
         if (player.div == "bottom-player") {
             callback(consequence);
@@ -497,6 +503,7 @@
 
         //check and apply consequence for skip
         if (consequence.skip){
+            console.log(player.div + " skipping go");
             // wait 1 second before moving on
             setTimeout(function() {
                 playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, callback);
@@ -511,6 +518,8 @@
             var card = findMatchingPickUpCard(player.hand, topDeckCard.consequence.pickUp);
             // if we have a pickUp play it
             if(card != null){
+                console.log(player.div + " adding to consequence");
+
                 discardCard(card, player, discard, function (topCard) {
                     var nextConsequence = clone(topCard.consequence);
                     nextConsequence.pickUp += consequence.pickUp;
@@ -537,10 +546,13 @@
         player.hand.forEach(function (card) {
             if (!found && isValidMove(card, discard[0])) {
                 found = true;
+                console.log(player.div + " discarding card: " + card.id);
                 discardCard(card, player, discard, function (topCard) {
 
                     // reverse direction
                     if(topCard.consequence.reverse){
+                        console.log(player.div + " is changing direction");
+
                         globalClockWise = !globalClockWise;
                         // next player needs to be reversed pass this one
                         nextPlayerIndex = getNextPlayer(players);
@@ -555,7 +567,8 @@
         });
 
         if (!found) {
-            selectFromDeck(player, deck, discard, function () {
+            selectFromDeck(player, deck, discard, function (card) {
+                console.log(player.div + " can't go so selecting from deck card: " + card.id);
                 setTimeout(function(){
                     playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, callback)
                 }, 500);
@@ -608,6 +621,8 @@
                         $("#uno-button").click(function () {
                             clickUnoButton = true;
                             message("Uno!");
+                            console.log(player.div + " Uno!");
+
                             playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn);
                             $("#uno-button").unbind("click");
                         });
@@ -617,6 +632,8 @@
                             if(clickUnoButton){
                                 return;
                             }
+
+                            message("Pick up 2 for not clicking Uno!");
 
                             console.log(player.div + " picking up 2 cards for not saying uno");
                                 // first card
@@ -696,7 +713,7 @@
             for(var i = 0; i < discard.length; i++) {
                 deck.push(discard[i]);
                 discard.splice(i, 1);
-                i--; //decrement i IF we remove an item
+                i--; //decrement i if we remove an item
             }
             discard.push(topCard);
         }
@@ -711,7 +728,7 @@
             moveCards(discard, 0, function () {
                 moveCards(deck, 0, function () {
                     moveCards(player.hand, 100, function () {
-                        callback();
+                        callback(selectedCard);
                     })
                 })
             })
