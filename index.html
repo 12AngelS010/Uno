@@ -189,6 +189,7 @@
             reverse: false,
             skip: false
         };
+    
     function createCard(id) {
         return {
             id: id,
@@ -216,7 +217,7 @@
             }
             special.forEach(function (character) {
                 // There are two special cards per colour
-                ["0","1", "2", "3"].forEach(function(number){
+                ["0","1"].forEach(function(number){
                     var card = createCard(colour + character + number);
                     switch(character){
                         case "s":
@@ -299,6 +300,10 @@
         cards.forEach(function (card) {
             var css = {left: card.left + "px", top: card.top + "px", width: card.width, height: "auto"};
             if (delay == 0) {
+                var src = card.faceup ? card.front : card.back;
+                if ($("#" + card.id).attr("src") != src) {
+                    $("#" + card.id).attr('src', src);
+                }
                 $("#" + card.id).css(css);
                 showCard(card);
             } else {
@@ -425,20 +430,64 @@
         return false;
     }
 
+    function findPickUp(hand, number){
+        var ret = null;
+        hand.forEach(function(card){
+            if(card.consequence.pickUp == number){
+                ret = card;
+            }
+        });
+        return ret;
+    }
+
+    function logConsequence(consequence){
+        console.log(JSON.stringify(consequence));
+    }
+
     function playGame(index, consequence, players, discard, deck, callback) {
         var player = players[index];
+
+        logConsequence(consequence);
 
         if (player.div == "bottom-player") {
             callback(consequence);
             return;
         }
 
-        //check and apply consequence
+        //check and apply consequence for skip
         if (consequence.skip){
             // wait 1 second before moving on
             setTimeout(function() {
                 playGame(index + 1, clone(globalEmptyConsequence), players, discard, deck, callback);
             }, 500);
+            return;
+        }
+
+        // check and apply consequence for pick up
+        if (consequence.pickUp != 0){
+            // look to see if we have a pick up card - if so play it
+            var topDeckCard = discard[0];
+            var card = findPickUp(player.hand, topDeckCard.consequence.pickUp);
+            // if we have a pickUp play it
+            if(card != null){
+                discardCard(card, player, discard, function (topCard) {
+                    var nextConsequence = clone(topCard.consequence);
+                    nextConsequence.pickUp += consequence.pickUp;
+                    setTimeout(function(){
+                        playGame(index + 1, nextConsequence, players, discard, deck, callback)
+                    }, 500);
+                });
+            } else {
+                console.log(player.div + " picking up " + consequence.pickUp + " cards");
+                for(var i = 0; i < consequence.pickUp - 1; i++){
+                    selectFromDeck(player, deck, discard, function (){});
+                }
+                selectFromDeck(player, deck, discard, function () {
+                    setTimeout(function(){
+                        playGame(index + 1, clone(globalEmptyConsequence), players, discard, deck, callback)
+                    }, 500);
+                });
+            }
             return;
         }
 
@@ -455,7 +504,7 @@
         });
 
         if (!found) {
-            selectFromDeck(player, deck, function () {
+            selectFromDeck(player, deck, discard, function () {
                 setTimeout(function(){
                     playGame(index + 1, clone(globalEmptyConsequence), players, discard, deck, callback)
                 }, 500);
@@ -526,7 +575,7 @@
         if (card != null) {
             $(".card").unbind("click");
 
-            selectFromDeck(player, deck, function () {
+            selectFromDeck(player, deck, discard, function () {
                 setTimeout(function(){
                     playGame(0, clone(globalEmptyConsequence), players, discard, deck, myTurn)
                 });
@@ -563,21 +612,40 @@
         globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 7500);
     }
 
-    function selectFromDeck(player, deck, callback) {
+    function selectFromDeck(player, deck, discard, callback) {
+        logConsequence(deck);
+        logConsequence(discard);
         // force card selection to be top of the deck
         var selectedCard = deck.shift();
 
+        // if deck is empty reset it with the discard pile
+        if(deck.length == 0){
+            var topCard = discard.shift();
+            for(var i = 0; i < discard.length; i++) {
+                deck.push(discard[i]);
+                discard.splice(i, 1);
+                i--; //decrement i IF we remove an item
+            }
+            discard.push(topCard);
+        }
+
         player.hand.push(selectedCard);
+
+        layoutCardStack(discard, "#discard", true);
         layoutCardStack(deck, "#deck", false);
         layoutCardHand(player);
 
         moveCards([selectedCard], 500, function () {
-            moveCards(deck, 0, function () {
-                moveCards(player.hand, 100, function () {
-                    callback();
+            moveCards(discard, 0, function () {
+                moveCards(deck, 0, function () {
+                    moveCards(player.hand, 100, function () {
+                        callback();
+                    })
                 })
             })
-        })
+        });
+        logConsequence(deck);
+        logConsequence(discard);
     }
 
     function dealOutCards(deck, players, discard) {
@@ -589,8 +657,10 @@
         var card = deck.shift();
         card.faceup = true;
         discard.push(card);
+
         layoutCardStack(discard, "#discard", true);
         layoutCardStack(deck, "#deck", false);
+
         moveCards(cards, 150, function () {
             moveCards(discard, 150, function () {
                 moveCards(deck, 0, function () {
@@ -604,13 +674,7 @@
                     message("Your turn");
 
                     $(".card").click(function (event) {
-                        var consequence = {
-                            pickUp: 0,
-                            reverse: false,
-                            skip: false
-                        }
-                        var consequence = clone(globalEmptyConsequence);
-                        cardClick(event, consequence, players, discard, deck);
+                        cardClick(event, clone(globalEmptyConsequence), players, discard, deck);
                     })
                 })
             })
@@ -686,9 +750,9 @@
             hand: [],
             name: "James",
             div: "left-player",
-            offsetTop: 15,
+            offsetTop: 20,/*15,*/
             offsetLeft: 0,
-            faceup: false,
+            faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
@@ -699,8 +763,8 @@
             name: "Sam",
             div: "top-player",
             offsetTop: 0,
-            offsetLeft: 15,
-            faceup: false,
+            offsetLeft: 20,/*15,*/
+            faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
@@ -710,9 +774,9 @@
             hand: [],
             name: "Emily",
             div: "right-player",
-            offsetTop: 15,
+            offsetTop: 20,/*15,*/
             offsetLeft: 0,
-            faceup: false,
+            faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
