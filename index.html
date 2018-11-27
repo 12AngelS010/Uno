@@ -255,6 +255,7 @@
         }
         return a;
     }
+
     // sort cards in place
     function sortCards(cards) {
         cards.sort(function (item1, item2) {
@@ -283,6 +284,7 @@
         $("#" + card.id).show();
         $("#" + card.id).css("z-index", card.zindex);
     }
+
     function animate(list, delay, callback) {
         if (list.length == 0) {
             callback();
@@ -305,6 +307,7 @@
             animate(list, delay, callback);
         });
     }
+
     function moveCards(cards, delay, callback) {
         var animations = [];
         cards.forEach(function (card) {
@@ -351,7 +354,7 @@
         return ret;
     }
 
-    // remove a card by ID from an arracy of cards
+    // remove a card by ID from an array of cards
     function removeCard(cards, id) {
         var ret = null;
         for (var i = cards.length - 1; i >= 0; --i) {
@@ -392,6 +395,7 @@
             offset = Math.max(-10, offset);
         });
     }
+
     // layout cards in a hand of cards
     function layoutCardHand(player) {
         var div = $("#" + player.div);
@@ -465,6 +469,7 @@
     // return the next play in the players list
     var globalPlayerIndex = -1;
     var globalClockWise = true;
+
     function getNextPlayer(players){
 
         if(globalClockWise) {
@@ -702,6 +707,7 @@
             })
         });
     }
+
     // select a card from the deck into the player's hand
     function selectFromDeck(player, deck, discard, callback) {
         // force card selection to be top of the deck
@@ -846,7 +852,7 @@
             div: "left-player",
             offsetTop: 20,/*15,*/
             offsetLeft: 0,
-            faceup: true,/*false,*/
+            faceup: false,/*true,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
@@ -857,7 +863,7 @@
             div: "top-player",
             offsetTop: 0,
             offsetLeft: 20,/*15,*/
-            faceup: true,/*false,*/
+            faceup: false,/*true,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
@@ -868,7 +874,7 @@
             div: "right-player",
             offsetTop: 20,/*15,*/
             offsetLeft: 0,
-            faceup: true,/*false,*/
+            faceup: false,/*true,*/
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false
