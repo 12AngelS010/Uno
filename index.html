@@ -584,12 +584,15 @@
         var expired = false;
 
         $("#uno-button").click(function () {
+            $("#uno-button").unbind("click");
+
             clickUnoButton = true;
+            expired = true;
+
             message("Uno!");
             console.log("Uno!");
 
             callback(true);
-            $("#uno-button").unbind("click");
         });
 
         // user has 3 seconds to click the uno button
