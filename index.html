@@ -187,7 +187,8 @@
     var globalEmptyConsequence = {
             pickUp: 0,
             reverse: false,
-            skip: false
+            skip: false,
+            pickColour: false
         };
 
     function createCard(id) {
@@ -200,6 +201,7 @@
             back: "images/back.png",
             faceup: false,
             size: 70,
+            highlight: false,
             consequence: clone(globalEmptyConsequence)
         }
     }
@@ -207,6 +209,7 @@
     // Create global variables
     var colours = ["b", "g", "r", "y"];
     var special = ["s", "r", "p"];
+    var blackCards = [];//["d", "w"];
 
     function createDeck() {
         var deck = [];
@@ -217,7 +220,7 @@
             }
             special.forEach(function (character) {
                 // There are two special cards per colour
-                ["0","1"].forEach(function(number){
+                for(var number = 0; number < 2; number++){
                     var card = createCard(colour + character + number);
                     switch(character){
                         case "s":
@@ -231,29 +234,40 @@
                             break;
                     }
                     deck.push(card);
-
-                });
+                }
             });
         });
 
-        //insert black cards
-        // for (var i = 0; i < 4; i++) {
-        //     deck.push(createCard ("xd" + i));
-        //     deck.push(createCard("xw" + i));
-        // }
+        // insert black cards
+        var colour = "x";
+        blackCards.forEach(function(character) {
+            for(var number = 0; number < 4; number++){
+                var card = createCard(colour + character + number);
+                switch(character){
+                    case "w":
+                        card.consequence.pickColour = true;
+                        break;
+                    case "d":
+                        card.consequence.pickUp = 4;
+                        card.consequence.pickColour = true;
+                        break;
+                }
+                deck.push(card);
+            }
+        });
         return deck;
     }
 
     // Shuffle an array in place
-    function shuffle(a) {
+    function shuffleCards(cards) {
         var j, x, i;
-        for (i = a.length - 1; i > 0; i--) {
+        for (i = cards.length - 1; i > 0; i--) {
             j = Math.floor(Math.random() * (i + 1));
-            x = a[i];
-            a[i] = a[j];
-            a[j] = x;
+            x = cards[i];
+            cards[i] = cards[j];
+            cards[j] = x;
         }
-        return a;
+        return cards;
     }
     // sort cards in place
     function sortCards(cards) {
@@ -264,6 +278,28 @@
                 return 1;
             return 0;
         });
+        return cards;
+    }
+    // find a card by ID in an array of cards
+    function findCard(cards, id) {
+        var ret = null;
+        cards.forEach(function (card) {
+            if (card.id == id) {
+                ret = card;
+            }
+        });
+        return ret;
+    }
+    // remove a card by ID from an arracy of cards
+    function removeCard(cards, id) {
+        var ret = null;
+        for (var i = cards.length - 1; i >= 0; --i) {
+            if (cards[i].id == id) {
+                ret = cards[i];
+                cards.splice(i, 1);
+            }
+        }
+        return ret;
     }
 
     // place all of the cards in the card div before moving them into hands, deck and discard piles
@@ -340,29 +376,6 @@
         return cards;
     }
 
-    // find a card by ID in an array of cards
-    function findCard(cards, id) {
-        var ret = null;
-        cards.forEach(function (card) {
-            if (card.id == id) {
-                ret = card;
-            }
-        });
-        return ret;
-    }
-
-    // remove a card by ID from an arracy of cards
-    function removeCard(cards, id) {
-        var ret = null;
-        for (var i = cards.length - 1; i >= 0; --i) {
-            if (cards[i].id == id) {
-                ret = cards[i];
-                cards.splice(i, 1);
-            }
-        }
-        return ret;
-    }
-
     // find a player by its html div name
     function findPlayer(players, div) {
         var ret = null;
@@ -414,6 +427,10 @@
         player.hand.forEach(function (card) {
             card.left = position.left + offsetLeft - adjleft;
             card.top = position.top + offsetTop - adjtop;
+            // if highlighting a card make it stand out
+            if(card.highlight){
+                card.top -= 20;
+            }
             card.zindex = zindex;
             card.faceup = player.faceup;
             card.width = player.width;
@@ -428,19 +445,32 @@
     }
 
     // check that 2 cards are a valid match and therefore a valid move
-    function isValidMove(cardA, cardB) {
-        if ((cardA.id[0]) == "x") {
+    function isValidMove(cardFromHand, topOfDiscard, consequence) {
+
+        // work out if we have a current pick up consequence
+        if(consequence.pickUp > 0){
+            // return true if they are the same pickUp number (otherwise false)
+            return (cardFromHand.consequence.pickUp == topOfDiscard.consequence.pickUp)
+        }
+
+        // check if its a black card
+        if ((cardFromHand.id[0]) == "x") {
             return true;
         }
-        if (colours.indexOf(cardA.id[0]) != -1) {
-            // Simple case are the card colour the same
-            if (cardA.id[0] == cardB.id[0]) {
+
+        // check if its a plan coloured card
+        if (colours.indexOf(cardFromHand.id[0]) != -1) {
+
+            // Simple case are the card colours the same
+            if (cardFromHand.id[0] == topOfDiscard.id[0]) {
                 return true;
             }
+
             // simple case are the card numbers the same
-            if (cardA.id[1] == cardB.id[1]) {
+            if (cardFromHand.id[1] == topOfDiscard.id[1]) {
                 return true;
             }
+
             return false;
         }
         return false;
@@ -463,9 +493,9 @@
     }
 
     // return the next play in the players list
-    var globalPlayerIndex = -1;
+    var globalPlayerIndex = 0;
     var globalClockWise = true;
-    function getNextPlayer(players){
+    function getNextPlayerIndex(players){
 
         if(globalClockWise) {
             globalPlayerIndex++;
@@ -486,20 +516,22 @@
     function playGame(index, consequence, players, discard, deck, callback) {
         var player = players[index];
 
+        // log the status before the player makes a decision
         var text = " cards: ";
         player.hand.forEach(function(card){
             text += card.id + " ";
         });
-
         console.log(player.div + " clockwise: " + globalClockWise + " discard: " + discard[0].id + " consiquence: " + JSON.stringify(consequence) + text);
 
 
+        // if we're back to the bottom player call the callback and return
         if (player.div == "bottom-player") {
             callback(consequence);
             return;
         }
 
-        var nextPlayerIndex = getNextPlayer(players);
+        // get the next player in the turn
+        var nextPlayerIndex = getNextPlayerIndex(players);
 
         //check and apply consequence for skip
         if (consequence.skip){
@@ -531,9 +563,9 @@
             } else {
                 console.log(player.div + " picking up " + consequence.pickUp + " cards");
                 for(var i = 0; i < consequence.pickUp - 1; i++){
-                    selectFromDeck(player, deck, discard, function (){});
+                    selectCardFromDeck(player, deck, discard, function (){});
                 }
-                selectFromDeck(player, deck, discard, function () {
+                selectCardFromDeck(player, deck, discard, function () {
                     setTimeout(function(){
                         playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, callback)
                     }, 500);
@@ -544,19 +576,19 @@
 
         var found = false;
         player.hand.forEach(function (card) {
-            if (!found && isValidMove(card, discard[0])) {
+            if (!found && isValidMove(card, discard[0], consequence)) {
                 found = true;
                 console.log(player.div + " discarding card: " + card.id);
-                discardCard(card, player, discard, function (topCard) {
 
+                discardCard(card, player, discard, function (topCard) {
                     // reverse direction
                     if(topCard.consequence.reverse){
                         console.log(player.div + " is changing direction");
 
                         globalClockWise = !globalClockWise;
                         // next player needs to be reversed pass this one
-                        nextPlayerIndex = getNextPlayer(players);
-                        nextPlayerIndex = getNextPlayer(players);
+                        nextPlayerIndex = getNextPlayerIndex(players);
+                        nextPlayerIndex = getNextPlayerIndex(players);
                     }
 
                     setTimeout(function(){
@@ -567,7 +599,7 @@
         });
 
         if (!found) {
-            selectFromDeck(player, deck, discard, function (card) {
+            selectCardFromDeck(player, deck, discard, function (card) {
                 console.log(player.div + " can't go so selecting from deck card: " + card.id);
                 setTimeout(function(){
                     playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, callback)
@@ -577,106 +609,292 @@
     }
 
     // human player handling function
-    function cardClick(event, myConsequence, players, discard, deck) {
+    function cardClick(event, consequence, players, discard, deck) {
         // find ths player
         var player = findPlayer(players, "bottom-player");
-        var nextPlayerIndex = getNextPlayer(players);
+
+        // get the next play in the turn
+        var nextPlayerIndex = getNextPlayerIndex(players);
 
         // empty the message
         message("");
 
-        function myTurn(nextConsequence) {
+        function takeMyTurn(consequence) {
             //check and apply consequence
-            if (nextConsequence.skip){
+            if (consequence.skip){
                 message("Skip a go");
 
-                // wait 1 second before moving on
+                // wait 1 second before clearing consequence and passing to the next player
                 setTimeout(function(){
-                    playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, myTurn);
+                    playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, takeMyTurn);
                 }, 500);
                 return;
             }
 
             message("Your turn");
             $(".card").click(function (event) {
-                cardClick(event, nextConsequence, players, discard, deck);
+                cardClick(event, consequence, players, discard, deck);
             });
         }
 
         // read the id from the event - this is the id of the card that has been clicked
-        // it could be any card
+        // it could be any card on the table
         var id = event.currentTarget.id;
 
-        // Search player hand to see if selected card is in there
+        // Search player's hand to see if selected card is in there
         var card = findCard(player.hand, id);
         if (card != null) {
-            if (isValidMove(card, discard[0])) {
-                $(".card").unbind("click");
-
-                discardCard(card, player, discard, function (topCard) {
-                    // special handling for uno button
-                    if(player.hand.length == 1){
-                        var clickUnoButton = false;
-
-                        $("#uno-button").click(function () {
-                            clickUnoButton = true;
-                            message("Uno!");
-                            console.log(player.div + " Uno!");
-
-                            playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn);
-                            $("#uno-button").unbind("click");
-                        });
-
-                        setTimeout(function(){
-                            $("#uno-button").unbind("click");
-                            if(clickUnoButton){
-                                return;
-                            }
-
-                            message("Pick up 2 for not clicking Uno!");
-
-                            console.log(player.div + " picking up 2 cards for not saying uno");
-                                // first card
-                                selectFromDeck(player, deck, discard, function () {
-                                    // second card
-                                    selectFromDeck(player, deck, discard, function () {
-                                        playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn);
-                                    });
-                                });
-                        }, 3000);
-
-                    } else {
-                        setTimeout(function () {
-                            playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, myTurn)
-                        }, 500);
-                    }
-                });
+            if(!isValidMove(card, discard[0], consequence)){
+                return;
             }
+
+            // stop furth clicks
+            $(".card").unbind("click");
+
+            // discard the hand card
+            discardCard(card, player, discard, function (topCard) {
+
+                // special handling for uno button if we only have one card left
+                if(player.hand.length == 1){
+                    var clickUnoButton = false;
+
+                    $("#uno-button").click(function () {
+                        clickUnoButton = true;
+                        message("Uno!");
+                        console.log(player.div + " Uno!");
+
+                        playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, takeMyTurn);
+                        $("#uno-button").unbind("click");
+                    });
+
+                    setTimeout(function(){
+                        $("#uno-button").unbind("click");
+                        if(clickUnoButton){
+                            return;
+                        }
+
+                        message("Pick up 2 for not clicking Uno!");
+
+                        console.log(player.div + " picking up 2 cards for not saying uno");
+                            // first card
+                            selectCardFromDeck(player, deck, discard, function () {
+                                // second card
+                                selectCardFromDeck(player, deck, discard, function () {
+                                    playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, takeMyTurn);
+                                });
+                            });
+                    }, 3000);
+
+                } else {
+                    setTimeout(function () {
+                        playGame(nextPlayerIndex, clone(topCard.consequence), players, discard, deck, takeMyTurn)
+                    }, 500);
+                }
+            });
         }
 
-        // look for the card in the deck
+        // otherwise look for the card in the deck
         card = findCard(deck, id);
         if (card != null) {
             $(".card").unbind("click");
 
-            selectFromDeck(player, deck, discard, function () {
+            // pick up a card
+            selectCardFromDeck(player, deck, discard, function () {
                 setTimeout(function(){
-                    playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, myTurn)
-                });
+                    playGame(nextPlayerIndex, clone(globalEmptyConsequence), players, discard, deck, takeMyTurn)
+                }, 500);
             });
         }
     }
 
-    function hint() {
+    function findAllValidCards(cards, topDiscardCard, consequence){
+        var ret = [];
+        cards.forEach(function(card){
+            if(isValidMove(card, topDiscardCard, consequence)){
+                ret.push(card);
+            }
+        });
+
+        return ret;
     }
 
+    function bot(player, game, consequence){
+        function success(card, player, game, consequence){
+            nextTurn(player, game, consequence);
+        }
+
+        function fail(card, player, game, consequence){
+            message("Error!");
+        }
+
+        // always call uno
+        function uno(callback){
+            message("Uno!");
+            callback(true);
+        }
+
+        var validCards = findAllValidCards(player.hand, game.discard[0], consequence);
+        if(validCards.length){
+            playerDiscardCard(validCards[0], player, game, consequence, success, fail, uno);
+        } else {
+            playerPickupCard(player, game, consequence, success);
+        }
+    }
+
+    var globalBetweenMovesTime = 500;
+    var globalYourTurnMessage = "Your turn!";
+    function nextTurn(player, game, consequence){
+
+        // check to see if we have a winner
+        if(player.hand.length == 0){
+            globalMessageShowTime = 0;
+            message(player.name + " has won!");
+            return;
+        }
+
+        // otherwise carry on
+        var nextPlayerIndex = getNextPlayerIndex(game.players);
+        var player = game.players[nextPlayerIndex];
+
+        setTimeout(function(){
+            if(player.human) {
+                message(globalYourTurnMessage);
+                setUpClickHandlers(game, consequence);
+            } else {
+                bot(player, game, consequence);
+            }
+        }, globalBetweenMovesTime);
+    }
+
+    function handleHandClickEvent(card, player, game, consequence){
+        console.log("Clicked " + card.id + " in players hand");
+
+        console.log("Unbinding all clicks");
+        $(".card").unbind("click");
+        $("#hint-button").unbind("click");
+
+        function success(card, player, game, consequence){
+            nextTurn(player, game, consequence);
+        }
+
+        // User has to click uno button
+        function uno(callback){
+            var clickUnoButton = false;
+            var expired = false;
+
+            $("#uno-button").click(function () {
+                clickUnoButton = true;
+                message("Uno!");
+                console.log(player.div + " Uno!");
+
+                callback(true);
+                $("#uno-button").unbind("click");
+            });
+
+            // user has 3 seconds to click the uno button
+            setTimeout(function() {
+                $("#uno-button").unbind("click");
+                expired = true;
+                if (!clickUnoButton) {
+                    callback(false);
+                }
+            }, 3000);
+
+            // give a count down timer
+            var i = 3;
+            message(" " + i--);
+            var interval = setInterval(function () {
+                message(" " + i--);
+                if(clickUnoButton || expired) {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+
+        function fail(card, player, game, consequence){
+            setUpClickHandlers(game, consequence);
+            if(consequence.pickUp > 0){
+                var validCards = findAllValidCards(player.hand, game.discard[0], consequence);
+                if(validCards.length == 0){
+                    message("You have to pick up!");
+                }
+            } else {
+                message("Card can not be discarded!");
+            }
+        }
+
+        playerDiscardCard(card, player, game, consequence, success, fail, uno);
+    }
+    function playerDiscardCard(card, player, game, consequence, success, fail, uno){
+        // check if the given card can be discarded onto the top of the discard pile
+        if(!isValidMove(card, game.discard[0], consequence)){
+            console.log("Not a valid move " + card.id + " can not be placed on " + game.discard[0].id + " with consequence " + JSON.stringify(consequence));
+            // failed not valid
+            fail(card, player, game, consequence);
+        } else {
+            console.log("Valid move " + card.id + " placed on " + game.discard[0].id + " with consequence " + JSON.stringify(consequence));
+            // discard card and pass the success callback
+            discardCard(card, player, game, consequence, success, uno);
+        }
+    }
+
+    function handleDeckClickEvent(card, player, game, consequence){
+        console.log("Clicked " + card.id + " in deck");
+
+        console.log("Unbinding all clicks");
+        $(".card").unbind("click");
+        $("#hint-button").unbind("click");
+
+        function success(card, player, game, consequence){
+            nextTurn(player, game, consequence);
+        }
+
+        playerPickupCard(player, game, consequence, success);
+    }
+    function playerPickupCard(player, game, consequence, success){
+        // pick up a card
+        selectCardFromDeck(player, game, consequence, success);
+    }
+
+    var globalHintHighlightTime = 2000;
+    function hint(player, game, consequence) {
+        var cards = findAllValidCards(player.hand, game.discard[0], consequence);
+
+        // highlight the cards
+        cards.forEach(function(card){
+           card.highlight = true;
+        });
+
+        if(!cards.length){
+            message("There are no valid cards to play.");
+            return;
+        }
+
+        message("Here are all the valid cards.");
+
+        // layout the cards with the highlight hints
+        layoutCardHand(player);
+        // move them instantly
+        moveCards(cards, 50, function () {
+            // set a timeout of 2 seconds and reset the highlight
+            setTimeout(function(){
+                // highlight the cards
+                cards.forEach(function(card){
+                    card.highlight = false;
+                });
+                layoutCardHand(player);
+                moveCards(cards, 50, function (){});
+            }, globalHintHighlightTime)
+        });
+    }
     function calculateCard() {
     }
 
     // send a message to the message box and cancel it after a period
     // we only want one timer running and we need to be able to cancel it
-    // so use a golbal var
+    // so use a global var
     var globalTimer = null;
+    var globalMessageShowTime = 3000;
     function message(text) {
         $("#message-box").html(text);
 
@@ -684,86 +902,221 @@
             clearTimeout(globalTimer); //cancel the previous timer.
             globalTimer = null;
         }
-        globalTimer = setTimeout(function(){$("#message-box").html("&nbsp")}, 7500);
+        if(text != globalYourTurnMessage && globalMessageShowTime > 0) {
+            globalTimer = setTimeout(function () {
+                $("#message-box").html("&nbsp")
+            }, globalMessageShowTime);
+        }
     }
 
     // discard a card from the player's hand to the discard pile
-    function discardCard(card, player, discard, callback) {
+    var globalDiscardCardTime = 500;
+    var globalHandSortTime = 100;
+    function discardCard(card, player, game, consequence, callback, uno) {
+        console.log("discarding card " + card.id);
+        // take the card out of the players hand
         var selectedCard = removeCard(player.hand, card.id);
-        discard.unshift(card);
+        // and put the card on the top of the discard pile
+        game.discard.unshift(selectedCard);
+
+        // force it to appear initially at the top of all cards
         $("#" + selectedCard.id).css("z-index", 2000);
-        layoutCardStack(discard, "#discard", true);
-        layoutCardHand(player);
-        moveCards([selectedCard], 500, function () {
-            moveCards(player.hand, 50, function () {
-                moveCards(discard, 0, function () {
-                    callback(card);
+
+        // empty the message
+        message("");
+
+        // if the discarded card is a pick up card then add to the consequence
+        // and reset the consequence
+        if(selectedCard.consequence.pickUp > 0){
+            console.log(player.div + " is adding to consequence");
+            consequence.pickUp += selectedCard.consequence.pickUp;
+            message("Pick up " + consequence.pickUp + "!");
+        }
+
+        // if the discarded card is a reverse then change direction
+        // and reset the consequence
+        if(selectedCard.consequence.reverse){
+            console.log(player.div + " is changing direction");
+            message("Change direction!");
+            globalClockWise = !globalClockWise;
+            consequence = clone(globalEmptyConsequence);
+        }
+
+        // if the discarded card is a skip then skip the next player
+        // and reset the consequence
+        if(selectedCard.consequence.skip){
+            console.log(player.div + " is skipping the next player");
+            message("Skip a go!");
+            nextPlayerIndex = getNextPlayerIndex(game.players);
+            consequence = clone(globalEmptyConsequence);
+        }
+
+        // layout the discard pile and the players hand
+        layoutCardStack(game.discard, "#discard", true);
+        layoutCardHand(player, player.hand, false);
+
+        // animate the moves
+        moveCards([selectedCard], globalDiscardCardTime, function () {
+            moveCards(game.discard, 0, function () {
+                moveCards(player.hand, globalHandSortTime, function () {
+
+                    function unoCallback(isUno){
+                        if(isUno){
+                            callback(selectedCard, player, game, consequence);
+                        } else {
+                            var pickUp2 = clone(globalEmptyConsequence);
+                            pickUp2.pickUp = 2;
+                            selectCardFromDeck(player, game, pickUp2, function(){
+                                callback(selectedCard, player, game, consequence);
+                            })
+                        }
+                    }
+
+                    // check if its the last card
+                    // if so call uno
+                    if(player.hand.length == 1) {
+                        uno(unoCallback);
+                    } else {
+                        callback(selectedCard, player, game, consequence);
+                    }
                 })
             })
         });
     }
     // select a card from the deck into the player's hand
-    function selectFromDeck(player, deck, discard, callback) {
-        // force card selection to be top of the deck
-        var selectedCard = deck.shift();
+    var globalSelectCardTime = 500;
+    function selectCardFromDeck(player, game, consequence, callback) {
+        // if we have a pick up consequence
+        // call the select function multiple times and return;
+        if(consequence.pickUp > 0){
+            message("Picking up " + consequence.pickUp);
+            for(var x = 0; x < consequence.pickUp - 1; x++){
+                selectCardFromDeck(player, game, clone(globalEmptyConsequence), function(){})
+            }
+            selectCardFromDeck(player, game, clone(globalEmptyConsequence), callback);
+            return;
+        }
+        // take the card from the top of the deck
+        var card = game.deck[0];
+        // remove it from the deck
+        var selectedCard = removeCard(game.deck, card.id);
+        // and put the card into the players hand
+        player.hand.unshift(selectedCard);
+
+        // force it to appear initially at the top of all cards
+        $("#" + selectedCard.id).css("z-index", 2000);
+
+        // empty the message
+        message("");
 
         // if deck is empty reset it with the discard pile
-        if(deck.length == 0){
-            var topCard = discard.shift();
-            for(var i = 0; i < discard.length; i++) {
-                deck.push(discard[i]);
-                discard.splice(i, 1);
+        if(game.deck.length == 0){
+            var topCard = game.discard.shift();
+            for(var i = 0; i < game.discard.length; i++) {
+                game.deck.push(game.discard[i]);
+                game.discard.splice(i, 1);
                 i--; //decrement i if we remove an item
             }
-            discard.push(topCard);
+            game.discard.push(topCard);
         }
 
-        player.hand.push(selectedCard);
-
-        layoutCardStack(discard, "#discard", true);
-        layoutCardStack(deck, "#deck", false);
+        // layout the discard pile (from a reset), the players hand and the deck
+        layoutCardStack(game.discard, "#discard", true);
+        layoutCardStack(game.deck, "#deck", true/*false*/);
         layoutCardHand(player);
 
-        moveCards([selectedCard], 500, function () {
-            moveCards(discard, 0, function () {
-                moveCards(deck, 0, function () {
-                    moveCards(player.hand, 100, function () {
-                        callback(selectedCard);
+        // animate the moves
+        moveCards([selectedCard], globalSelectCardTime, function () {
+            moveCards(game.discard, 0, function () {
+                moveCards(game.deck, 0, function () {
+                    moveCards(player.hand, globalHandSortTime, function () {
+                        callback(selectedCard, player, game, clone(globalEmptyConsequence));
                     })
                 })
             })
         });
     }
 
+    function setUpClickHandlers(game, consequence){
+        console.log("setting up click handlers");
+        $("#hint-button").show();
+        $("#sort-button").show();
+        $("#uno-button").show();
+
+        var player = findPlayer(game.players, "bottom-player");
+
+        // set-up select a deck card
+        game.deck.forEach(function(card){
+            $("#" + card.id).click(function(event){
+                // check the card was in the deck
+                // then force the card clicked to the top card in the deck
+                var card = findCard(game.deck, event.currentTarget.id);
+                if(card) {
+                    handleDeckClickEvent(game.deck[0], player, game, consequence);
+                }
+            })
+        });
+
+        // set-up click a hand card
+        // find this player
+        player.hand.forEach(function(card){
+            $("#" + card.id).click(function(event){
+                // pass in the id of the selected card
+                var card = findCard(player.hand, event.currentTarget.id);
+                handleHandClickEvent(card, player, game, consequence);
+            })
+        });
+
+        // setup the function so that when the player clicks the hint button it provides a hint
+        $("#hint-button").click(function () {
+            hint(player, game, consequence);
+        });
+    }
+
+    var globalDealCardsTime = 150;
+    var globalDeckFaceUp = false;
+    var globalDealOutNumber = 7;
     // deal out cards to the players from the deck move them into place and animate the move
-    function dealOutCards(deck, players, discard) {
+    function dealOutCards(game) {
+        // hide the deal button once used
         $("#deal-button").hide();
-        var cards = dealCards(deck, players, 7);
-        players.forEach(function (player) {
+
+        // deal out the cards, returning the cards dealt out
+        var cards = dealCards(game.deck, game.players, globalDealOutNumber);
+
+        // ask all of the players to layout their hands on the table
+        game.players.forEach(function (player) {
             layoutCardHand(player);
         });
-        var card = deck.shift();
+
+        // create a discard pile with the top card
+        var card = game.deck.shift();
+        // turn it face up
         card.faceup = true;
-        discard.push(card);
+        game.discard.push(card);
 
-        layoutCardStack(discard, "#discard", true);
-        layoutCardStack(deck, "#deck", false);
+        // layout the card in the discard pile
+        layoutCardStack(game.discard, "#discard", true);
 
-        moveCards(cards, 150, function () {
-            moveCards(discard, 150, function () {
-                moveCards(deck, 0, function () {
+        // layout the cards in the deck
+        layoutCardStack(game.deck, "#deck", globalDeckFaceUp);
+
+        // animate the cards into place
+        moveCards(cards, globalDealCardsTime, function () {
+            moveCards(game.discard, globalDealCardsTime, function () {
+                moveCards(game.deck, 0, function () {
 
                     // now show the sort, hint and message objects
                     $("#message-box").show();
-                    $("#hint-button").show();
-                    $("#sort-button").show();
-                    $("#uno-button").show();
 
-                    message("Your turn");
+                    // start the game
+                    // set the player index to the end of the players list so that it starts at the fist player next
+                    globalPlayerIndex = game.players.length - 1;
+                    nextTurn(game.players[globalPlayerIndex], game, clone(globalEmptyConsequence))
 
-                    $(".card").click(function (event) {
-                        cardClick(event, clone(globalEmptyConsequence), players, discard, deck);
-                    })
+                    // $(".card").click(function (event) {
+                    //     cardClick(event, clone(globalEmptyConsequence), players, discard, deck);
+                    // })
                 })
             })
         });
@@ -834,12 +1187,20 @@
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
         $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
 
-        // create the discard and deck piles
-        var discard = [];
-        var deck = createDeck();
-
         // create the players array and creat some players
         var players = [];
+        players.push({
+            hand: [],
+            name: "Barney",
+            div: "bottom-player",
+            offsetTop: 0,
+            offsetLeft: 25,
+            faceup: true,
+            width: cardWidth,
+            height: cardHeight,
+            sort: false,
+            human: false /*true*/
+        });
         players.push({
             hand: [],
             name: "James",
@@ -849,7 +1210,8 @@
             faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
-            sort: false
+            sort: true, //false,
+            human: false
         });
         players.push({
             hand: [],
@@ -860,7 +1222,8 @@
             faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
-            sort: false
+            sort: true, //false,
+            human: false
         });
         players.push({
             hand: [],
@@ -871,24 +1234,25 @@
             faceup: true,/*false,*/
             width: smallCardWidth,
             height: smallCardHeight,
-            sort: false
-        });
-        players.push({
-            hand: [],
-            name: "Barney",
-            div: "bottom-player",
-            offsetTop: 0,
-            offsetLeft: 25,
-            faceup: true,
-            width: cardWidth,
-            height: cardHeight,
-            sort: false
+            sort: true, //false,
+            human: false
         });
 
+        globalBetweenMovesTime = 500;
+        globalDiscardCardTime = 500;
+        globalHandSortTime = 10;//100;
+        globalSelectCardTime = 500;
+        globalDealCardsTime = 100;
+        globalDealOutNumber = 7;
+
+        // create the discard and deck piles
+        var discard = [];
+        var deck = createDeck();
         // put the cards initially in their own div area
         layoutCardsOnTable(deck, "#cards");
-        // randomly shuffle the deck
-        deck = shuffle(deck);
+        // randomly shuffleCards the deck
+        deck = shuffleCards(deck);
+        //deck = sortCards(deck);
         // layout the cards into the deck
         layoutCardStack(deck, "#deck", false);
         // move them into the deck on the table
@@ -897,14 +1261,12 @@
         // show the deal button so it can be clicked
         $("#deal-button").show();
 
+        // set up the game object
+        var game = {players: players, deck: deck, discard: []};
+
         // setup the function so that when the player clicks the deal-button it deals out the cards
         $("#deal-button").click(function () {
-            dealOutCards(deck, players, discard)
-        });
-
-        // setup the function so that when the player clicks the hint button it provides a hint
-        $("#hint-button").click(function () {
-            message("Try match the colour and number of your cards with the card on the discard pile.");
+            dealOutCards(game)
         });
 
         // set-up the function so that when the play clicks the sort button their hand is sorted
@@ -912,28 +1274,9 @@
             var player = findPlayer(players, "bottom-player");
             player.sort = true;
             layoutCardHand(player);
-            moveCards(player.hand, 250, function () {
+            moveCards(player.hand, globalHandSortTime, function () {
             });
         });
-
-        // for(var i = 0; i < 10; i++) {
-        //     console.log(getNextPlayer(players));
-        // }
-        //
-        // console.log("reverse");
-        // globalClockWise = !globalClockWise;
-        //
-        // for(var i = 0; i < 11; i++) {
-        //     console.log(getNextPlayer(players));
-        // }
-        //
-        // console.log("reverse");
-        // globalClockWise = !globalClockWise;
-        //
-        // for(var i = 0; i < 10; i++) {
-        //     console.log(getNextPlayer(players));
-        // }
-
     })
 
 </script>
