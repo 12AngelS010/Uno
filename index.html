@@ -105,6 +105,35 @@
         margin: 0;
     }
 
+    .box {
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        margin: 0px;
+        border: 1px solid darkslategrey;
+        /*display: none;*/
+    }
+
+    .blue {
+        background: #4a4cff;
+    }
+
+    .red {
+        background: #ff4a4b;
+    }
+
+    .green {
+        background: #4ba04b;
+    }
+
+    .yellow {
+        background: #ffa002;
+    }
+
+    .black {
+        background: #000000;
+    }
+
 </style>
 <body>
 <!--<hr id="hr" class="hl">-->
@@ -117,6 +146,13 @@
 
 <div id="cards"></div>
 <div class="container">
+
+    <div id="card-colour" class="box"></div>
+
+    <div id="red-box" class="red box"></div>
+    <div id="green-box" class="green box"></div>
+    <div id="blue-box" class="blue box"></div>
+    <div id="yellow-box" class="yellow box"></div>
 
     <div id="top-player"></div>
     <div id="left-player"></div>
@@ -203,6 +239,7 @@
             faceup: false,
             size: 70,
             highlight: false,
+            colour: "",
             consequence: clone(globalEmptyConsequence)
         }
     }
@@ -210,19 +247,22 @@
     // Create global variables
     var colours = ["b", "g", "r", "y"];
     var special = ["s", "r", "p"];
-    var blackCards = [];//["d", "w"];
+    var blackCards = ["d", "w"];
 
     function createDeck() {
         var deck = [];
         // insert all coloured cards
         colours.forEach(function (colour) {
-            for (var i = 0; i < 10; i++) {
-                deck.push(createCard(colour + i));
+            for (var i = 0; i < 5/*10*/; i++) {
+                var card = createCard(colour + i);
+                card.colour = colour;
+                deck.push(card);
             }
             special.forEach(function (character) {
                 // There are two special cards per colour
                 for(var number = 0; number < 2; number++){
                     var card = createCard(colour + character + number);
+                    card.colour = colour;
                     switch(character){
                         case "s":
                             card.consequence.skip = true;
@@ -242,7 +282,7 @@
         // insert black cards
         var colour = "x";
         blackCards.forEach(function(character) {
-            for(var number = 0; number < 4; number++){
+            for(var number = 0; number < 0/*10/*4*/; number++){
                 var card = createCard(colour + character + number);
                 switch(character){
                     case "w":
@@ -580,39 +620,38 @@
 
     // User has to click uno button
     function unoCallback(callback){
-        var clickUnoButton = false;
-        var expired = false;
+
+        var interval = null;
+        var timeout = null;
+        var time = 3;// seconds
+
+        // user has seconds to click the uno button
+        timeout = setTimeout(function() {
+            $("#uno-button").unbind("click");
+            clearTimeout(timeout);
+            clearInterval(interval);
+
+            callback(false);
+        }, time * 1000);
+
+        // give a 1 second count down timer
+        var i = time;
+        message(" " + i--);
+        interval = setInterval(function () {
+            message(" " + i--);
+        }, 1000);
 
         $("#uno-button").click(function () {
             $("#uno-button").unbind("click");
 
-            clickUnoButton = true;
-            expired = true;
+            clearTimeout(timeout);
+            clearInterval(interval);
 
             message("Uno!");
             console.log("Uno!");
 
             callback(true);
         });
-
-        // user has 3 seconds to click the uno button
-        setTimeout(function() {
-            $("#uno-button").unbind("click");
-            expired = true;
-            if (!clickUnoButton) {
-                callback(false);
-            }
-        }, 3000);
-
-        // give a count down timer
-        var i = 3;
-        message(" " + i--);
-        var interval = setInterval(function () {
-            message(" " + i--);
-            if(clickUnoButton || expired) {
-                clearInterval(interval);
-            }
-        }, 1000);
     }
 
     function handleHandClickEvent(card, player, game, consequence){
@@ -766,12 +805,37 @@
     var globalDiscardCardTime = 500;
     var globalHandSortTime = 100;
 
+    // colour the box based on the card
+    function colourBox(card){
+        $("#card-colour").show();
+        $("#card-colour").removeClass();
+        switch(card.colour){
+            case "r":
+                $("#card-colour").addClass("red box");
+                break;
+            case "g":
+                $("#card-colour").addClass("green box");
+                break;
+            case "b":
+                $("#card-colour").addClass("blue box");
+                break;
+            case "y":
+                $("#card-colour").addClass("yellow box");
+                break;
+            default:
+                $("#card-colour").addClass("black box");
+                break;
+        }
+    }
+
     function discardCard(card, player, game, consequence, callback, uno) {
         console.log("discarding card " + card.id);
         // take the card out of the players hand
         var selectedCard = removeCard(player.hand, card.id);
         // and put the card on the top of the discard pile
         game.discard.unshift(card);
+
+        colourBox(card);
 
         // force it to appear initially at the top of all cards
         $("#" + card.id).css("z-index", 2000);
@@ -941,7 +1005,9 @@
             $("#" + card.id).click(function(event){
                 // pass in the id of the selected card
                 var card = findCard(player.hand, event.currentTarget.id);
-                handleHandClickEvent(card, player, game, consequence);
+                if(card) {
+                    handleHandClickEvent(card, player, game, consequence);
+                }
             })
         });
 
@@ -976,6 +1042,7 @@
         // turn it face up
         card.faceup = true;
         game.discard.push(card);
+        colourBox(card);
 
         // layout the card in the discard pile
         layoutCardStack(game.discard, "#discard", true);
@@ -1023,7 +1090,7 @@
         }
 
         var headerOffset = 75;
-        var topOffSet = headerOffset + 130;
+        var topOffSet = headerOffset + 150;
 
         var tableHorizontalMiddle = width / 2;
         var tableVerticalMiddle = maxTableHeight / 2;
@@ -1056,12 +1123,28 @@
         $("#uno-button").css("top", maxTableHeight - cardHeight / 3 + "px");
 
         var messageWidth = Math.min(maxTableWidth, 300);
+        var messageTop = maxTableHeight - 2 * cardHeight - 45;
+        var messageLeft = tableHorizontalMiddle - messageWidth / 2;
         $("#message-box").css("width", messageWidth + "px");
-        $("#message-box").css("left", tableHorizontalMiddle - messageWidth / 2 + "px");
-        $("#message-box").css("top", maxTableHeight - 2 * cardHeight - 25 + "px");
+        $("#message-box").css("left", messageLeft + "px");
+        $("#message-box").css("top", messageTop + "px");
 
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
         $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
+
+        var boxTop = messageTop - 35;
+        var boxLeft = tableHorizontalMiddle - 10;
+        $("#red-box").css("left", boxLeft - cardWidth + "px");
+        $("#red-box").css("top", boxTop + "px");
+        $("#green-box").css("left", boxLeft - cardWidth / 2 + 10 + "px");
+        $("#green-box").css("top", boxTop + "px");
+        $("#blue-box").css("left", boxLeft + cardWidth / 2 - 10 + "px");
+        $("#blue-box").css("top", boxTop + "px");
+        $("#yellow-box").css("left", boxLeft + cardWidth + "px");
+        $("#yellow-box").css("top", boxTop + "px");
+
+        $("#card-colour").css("left", tableHorizontalMiddle + cardWidth / 2 + "px");
+        $("#card-colour").css("top", topOffSet - 85 + "px");
 
         globalBetweenMovesTime = 500;
         globalDiscardCardTime = 500;
@@ -1069,9 +1152,9 @@
         globalSelectCardTime = 500;
         globalDealCardsTime = 150;
         globalDealOutNumber = 7;
-        globalDeckFaceUp = false;//true;
-        playersFaceUp = false;//true;
-        playersOffset = 15;//25;
+        globalDeckFaceUp = true;
+        playersFaceUp = true;
+        playersOffset = 25;
 
         // create the players array and creat some players
         var players = [];
