@@ -615,7 +615,7 @@
             player.score += total;
             var has = "has";
             if(player.name == "You"){
-                has = "have"
+                has = "have";
             }
             message(player.name + " " + has + " won! Total points = " + player.score);
             $("#reset-button").show();
@@ -1199,7 +1199,7 @@
             height: cardHeight,
             sort: false,
             score: 0,
-            human: true //false //true
+            human: true
         });
         players.push({
             hand: [],
@@ -1290,9 +1290,7 @@
                     moveCards(game.deck, 0, function () {
                         dealOutCards(game);
                     })
-                })
-
-            dealOutCards(game);
+                });
         });
 
         // set-up the function so that when the play clicks the sort button their hand is sorted
