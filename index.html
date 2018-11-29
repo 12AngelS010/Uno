@@ -255,7 +255,7 @@
         var deck = [];
         // insert all coloured cards
         colours.forEach(function (colour) {
-            for (var i = 0; i < 5/*10*/; i++) {
+            for (var i = 0; i < /*5*/10; i++) {
                 var card = createCard(colour + i);
                 card.colour = colour;
                 card.score = i;
@@ -613,7 +613,11 @@
                 console.log(player.name + " has a total score of " + player.score);
             });
             player.score += total;
-            message(player.name + " has won! Total points = " + player.score);
+            var has = "has";
+            if(player.name == "You"){
+                has = "have"
+            }
+            message(player.name + " " + has + " won! Total points = " + player.score);
             $("#reset-button").show();
 
             return;
@@ -1177,16 +1181,16 @@
         globalHandSortTime = 100;
         globalSelectCardTime = 500;
         globalDealCardsTime = 150;
-        globalDealOutNumber = 2 /*7*/;
-        globalDeckFaceUp = true;
-        playersFaceUp = true;
-        playersOffset = 25;
+        globalDealOutNumber = 7;
+        globalDeckFaceUp = false;
+        playersFaceUp = false;
+        playersOffset = 15;
 
         // create the players array and creat some players
         var players = [];
         players.push({
             hand: [],
-            name: "Barney",
+            name: "You",
             div: "bottom-player",
             offsetTop: 0,
             offsetLeft: 25,
