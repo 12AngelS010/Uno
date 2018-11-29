@@ -163,6 +163,7 @@
     <div id="discard"></div>
 
     <button id="deal-button"  class="btn btn-danger btn-lg button">Deal</button>
+    <button id="reset-button"  class="btn btn-danger btn-lg button">Restart</button>
     <button id="sort-button" style="width:50px" class="btn btn-info btn-sm button">Sort</button>
     <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
     <input type="image" id="uno-button" src="images/UNO-button.png" class="btn btn-default btn-sm button">
@@ -240,6 +241,7 @@
             size: 70,
             highlight: false,
             colour: "",
+            score: 0,
             consequence: clone(globalEmptyConsequence)
         }
     }
@@ -256,6 +258,7 @@
             for (var i = 0; i < 5/*10*/; i++) {
                 var card = createCard(colour + i);
                 card.colour = colour;
+                card.score = i;
                 deck.push(card);
             }
             special.forEach(function (character) {
@@ -263,6 +266,7 @@
                 for(var number = 0; number < 2; number++){
                     var card = createCard(colour + character + number);
                     card.colour = colour;
+                    card.score = 20;
                     switch(character){
                         case "s":
                             card.consequence.skip = true;
@@ -284,6 +288,7 @@
         blackCards.forEach(function(character) {
             for(var number = 0; number < 0/*10/*4*/; number++){
                 var card = createCard(colour + character + number);
+                card.score = 50;
                 switch(character){
                     case "w":
                         card.consequence.pickColour = true;
@@ -600,7 +605,17 @@
         // check to see if we have a winner
         if(player.hand.length == 0){
             globalMessageShowTime = 0;
-            message(player.name + " has won!");
+            var total = 0;
+            game.players.forEach(function(player){
+                var score = calculateScore(player.hand);
+                total += score;
+                console.log(player.name + " has a hand score of " + score);
+                console.log(player.name + " has a total score of " + player.score);
+            });
+            player.score += total;
+            message(player.name + " has won! Total points = " + player.score);
+            $("#reset-button").show();
+
             return;
         }
 
@@ -778,7 +793,6 @@
     var globalMessageShowTime = 3000;
     function message(text) {
         $("#message-box").html(text);
-
         if (globalTimer) {
             clearTimeout(globalTimer); //cancel the previous timer.
             globalTimer = null;
@@ -1022,8 +1036,9 @@
     var globalDealOutNumber = 7;
     // deal out cards to the players from the deck move them into place and animate the move
     function dealOutCards(game) {
-        // hide the deal button once used
+        // hide the deal and new game button once used
         $("#deal-button").hide();
+        $("#reset-button").hide();
 
         // deal out the cards, returning the cards dealt out
         var cards = dealCards(game.deck, game.players, globalDealOutNumber);
@@ -1063,6 +1078,14 @@
                 })
             })
         });
+    }
+
+    function calculateScore (cards){
+        var total = 0;
+        cards.forEach(function(card){
+            total += card.score
+        });
+        return total
     }
 
     // this is the starting function for jQuery.
@@ -1130,7 +1153,10 @@
         $("#message-box").css("top", messageTop + "px");
 
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
-        $("#deal-button").css("top", topOffSet - 50 + cardHeight / 2 - 10 + "px");
+        $("#deal-button").css("top", topOffSet - 60 + cardHeight / 2 + "px");
+
+        $("#reset-button").css("left", tableHorizontalMiddle - 50 + "px");
+        $("#reset-button").css("top", topOffSet - 30 + cardHeight + "px");
 
         var boxTop = messageTop - 35;
         var boxLeft = tableHorizontalMiddle - 10;
@@ -1151,7 +1177,7 @@
         globalHandSortTime = 100;
         globalSelectCardTime = 500;
         globalDealCardsTime = 150;
-        globalDealOutNumber = 7;
+        globalDealOutNumber = 2 /*7*/;
         globalDeckFaceUp = true;
         playersFaceUp = true;
         playersOffset = 25;
@@ -1168,6 +1194,7 @@
             width: cardWidth,
             height: cardHeight,
             sort: false,
+            score: 0,
             human: true //false //true
         });
         players.push({
@@ -1180,6 +1207,7 @@
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
+            score: 0,
             human: false
         });
         players.push({
@@ -1192,6 +1220,7 @@
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
+            score: 0,
             human: false
         });
         players.push({
@@ -1204,12 +1233,15 @@
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
+            score: 0,
             human: false
         });
 
         // create the discard and deck piles
         var discard = [];
         var deck = createDeck();
+        var totalScore = calculateScore(deck);
+        console.log("total score of the deck is " + totalScore);
         // put the cards initially in their own div area
         layoutCardsOnTable(deck, "#cards");
         // randomly shuffleCards the deck
@@ -1228,7 +1260,35 @@
 
         // setup the function so that when the player clicks the deal-button it deals out the cards
         $("#deal-button").click(function () {
-            dealOutCards(game)
+            dealOutCards(game);
+        });
+
+        $("#reset-button").click(function () {
+            game.deck = shuffleCards(createDeck());
+            game.discard = [];
+            game.players.forEach(function(player){
+                player.hand = [];
+            });
+
+            // ask all of the players to layout their hands on the table
+            game.players.forEach(function (player) {
+                layoutCardHand(player);
+            });
+
+            // layout the card in the discard pile
+            layoutCardStack(game.discard, "#discard", true);
+
+            // layout the cards in the deck
+            layoutCardStack(game.deck, "#deck", globalDeckFaceUp);
+
+            // animate the cards into place
+                moveCards(game.discard, globalDealCardsTime, function () {
+                    moveCards(game.deck, 0, function () {
+                        dealOutCards(game);
+                    })
+                })
+
+            dealOutCards(game);
         });
 
         // set-up the function so that when the play clicks the sort button their hand is sorted
