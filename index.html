@@ -1277,7 +1277,7 @@
         globalDiscardCardTime = 500;
         globalHandSortTime = 100;
         globalSelectCardTime = 500;
-        globalDealCardsTime = 0;//150;
+        globalDealCardsTime = 150;
         globalDealOutNumber = 7;
         globalDeckFaceUp = false;
         playersFaceUp = false;
@@ -1359,7 +1359,7 @@
         // set up the game object
         var game = {players: players, deck: deck, discard: []};
 
-        dealOutCards(game);
+        //dealOutCards(game);
 
         // setup the function so that when the player clicks the deal-button it deals out the cards
         $("#deal-button").click(function () {
