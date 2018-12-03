@@ -111,7 +111,7 @@
         height: 25px;
         margin: 0px;
         border: 1px solid darkslategrey;
-        display: none;
+        /*display: none;*/
     }
 
     .blue {
@@ -147,12 +147,14 @@
 <div id="cards"></div>
 <div class="container">
 
-    <div id="card-colour" class="box"></div>
+    <div id="card-colour" class="box" style="display:none"></div>
 
-    <div id="red-box" class="red box"></div>
-    <div id="green-box" class="green box"></div>
-    <div id="blue-box" class="blue box"></div>
-    <div id="yellow-box" class="yellow box"></div>
+    <div id="colour-choice" style="display:none">
+        <div id="red-box" class="red box"></div>
+        <div id="green-box" class="green box"></div>
+        <div id="blue-box" class="blue box"></div>
+        <div id="yellow-box" class="yellow box"></div>
+    </div>
 
     <div id="top-player"></div>
     <div id="left-player"></div>
@@ -168,7 +170,7 @@
     <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
     <input type="image" id="uno-button" src="images/UNO-button.png" class="btn btn-default btn-sm button">
 
-    <div id="message-box" style="min-height:52px" class="alert alert-warning message">&nbsp;</div>
+    <div id="message-box" style="min-height:50px" class="alert alert-warning message">&nbsp;</div>
 </div>
 
 <script>
@@ -187,7 +189,7 @@
             case "y":
                 image = image + "yellow";
                 break;
-            case "x":
+            case "z":
                 image = image + "black";
                 break;
             default:
@@ -255,7 +257,7 @@
         var deck = [];
         // insert all coloured cards
         colours.forEach(function (colour) {
-            for (var i = 0; i < /*5*/10; i++) {
+            for (var i = 0; i < 10; i++) {
                 var card = createCard(colour + i);
                 card.colour = colour;
                 card.score = i;
@@ -284,9 +286,9 @@
         });
 
         // insert black cards
-        var colour = "x";
+        var colour = "z";
         blackCards.forEach(function(character) {
-            for(var number = 0; number < 0/*10/*4*/; number++){
+            for(var number = 0; number < 4; number++){
                 var card = createCard(colour + character + number);
                 card.score = 50;
                 switch(character){
@@ -500,9 +502,15 @@
             return (cardFromHand.consequence.pickUp == topOfDiscard.consequence.pickUp)
         }
 
-        // check if its a black card
-        if ((cardFromHand.id[0]) == "x") {
+        // check if its player is playing a black card, always return true
+        if ((cardFromHand.id[0]) == "z") {
             return true;
+        }
+
+        // check if player is playing to a black onto a black card
+        // if they are they must have the correct colour
+        if(topOfDiscard.id[0] == "z"){
+            return ( cardFromHand.colour == topOfDiscard.colour ) || (topOfDiscard.colour == "");
         }
 
         // check if its a plan coloured card
@@ -570,6 +578,11 @@
         return ret;
     }
 
+    // find highest count colour - funciton taken from stack overflow
+    function highestCount(obj){
+        return Object.keys(obj).reduce(function(a, b){ return obj[a] > obj[b] ? a : b });
+    }
+
     function bot(player, game, consequence){
         function success(card, player, game, consequence){
             nextTurn(player, game, consequence);
@@ -586,15 +599,42 @@
         }
 
         // if we pick up a card and can play then always play it
-        function playCard(callback){
+        function playPickupCard(callback){
             callback(true);
+        }
+
+        function pickColour(card, player, game, consequence, callback){
+            var colour = "y"; // default
+
+            var count = {r:0, g:0, b:0, y:0, x:-1};
+            player.hand.forEach(function(card){
+                switch(card.colour){
+                    case "r":
+                        count.r++;
+                        break;
+                    case "g":
+                        count.g++;
+                        break;
+                    case "b":
+                        count.b++;
+                        break;
+                    case "y":
+                        count.y++;
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            colour = highestCount(count);
+            callback(colour);
         }
 
         var validCards = findAllValidCards(player.hand, game.discard[0], consequence);
         if(validCards.length){
-            playerDiscardCard(validCards[0], player, game, consequence, success, fail, uno);
+            playerDiscardCard(validCards[0], player, game, consequence, success, fail, uno, pickColour);
         } else {
-            playerPickupCard(player, game, consequence, success, playCard, uno);
+            playerPickupCard(player, game, consequence, success, playPickupCard, uno, pickColour);
         }
     }
 
@@ -673,6 +713,51 @@
         });
     }
 
+    function pickColourCallback(card, player, game, consequence, callback){
+        $("#colour-choice").show();
+
+        $(".box").click(function(event){
+            $(".box").unbind("click");
+            $("#colour-choice").hide();
+
+            var id = event.currentTarget.id;
+            switch(id){
+                case "red-box":
+                    callback("r");
+                    break;
+                case "green-box":
+                    callback("g");
+                    break;
+                case "blue-box":
+                    callback("b");
+                    break;
+                case "yellow-box":
+                    callback("y");
+                    break;
+                default:
+                    callback("y");
+                    break;
+            }
+        });
+
+        // ignore colour pick and put the card back
+        function ignore() {
+            $(".box").unbind("click");
+            $("#colour-choice").hide();
+            $(".card").unbind("click");
+
+            layoutCardHand(player);
+            moveCards(player.hand, globalHandSortTime, function () {
+                setUpClickHandlers(game, consequence);
+            });
+        }
+
+        player.hand.forEach(function(card){
+            $("#" + card.id).click(ignore);
+        });
+
+    }
+
     function handleHandClickEvent(card, player, game, consequence){
         console.log("Clicked " + card.id + " in players hand");
 
@@ -696,9 +781,9 @@
             }
         }
 
-        playerDiscardCard(card, player, game, consequence, success, fail, unoCallback);
+        playerDiscardCard(card, player, game, consequence, success, fail, unoCallback, pickColourCallback);
     }
-    function playerDiscardCard(card, player, game, consequence, success, fail, uno){
+    function playerDiscardCard(card, player, game, consequence, success, fail, uno, pickColour){
         // check if the given card can be discarded onto the top of the discard pile
         if(!isValidMove(card, game.discard[0], consequence)){
             console.log("Not a valid move " + card.id + " can not be placed on " + game.discard[0].id + " with consequence " + JSON.stringify(consequence));
@@ -707,7 +792,7 @@
         } else {
             console.log("Valid move " + card.id + " placed on " + game.discard[0].id + " with consequence " + JSON.stringify(consequence));
             // discard card and pass the success callback
-            discardCard(card, player, game, consequence, success, uno);
+            discardCard(card, player, game, consequence, success, uno, pickColour);
         }
     }
 
@@ -723,7 +808,7 @@
         }
 
         // if we pick up a card and can play it allow the human to choose
-        function playCard(callback){
+        function playPickupCard(callback){
             message("Click card if you want to discard, otherwise click your hand");
             function selectDiscard(){
                 $(".card").unbind("click");
@@ -749,11 +834,11 @@
             player.hand.push(temp);
         }
 
-        playerPickupCard(player, game, consequence, success, playCard, unoCallback);
+        playerPickupCard(player, game, consequence, success, playPickupCard, unoCallback, pickColourCallback);
     }
-    function playerPickupCard(player, game, consequence, success, playCard, uno){
+    function playerPickupCard(player, game, consequence, success, playCard, uno, pickColour){
         // pick up a card
-        selectCardFromDeck(player, game, consequence, success, playCard, uno);
+        selectCardFromDeck(player, game, consequence, success, playCard, uno, pickColour);
     }
 
     var globalHintHighlightTime = 2000;
@@ -824,10 +909,9 @@
     var globalHandSortTime = 100;
 
     // colour the box based on the card
-    function colourBox(card){
-        $("#card-colour").show();
+    function colourBox(colour){
         $("#card-colour").removeClass();
-        switch(card.colour){
+        switch(colour){
             case "r":
                 $("#card-colour").addClass("red box");
                 break;
@@ -846,83 +930,94 @@
         }
     }
 
-    function discardCard(card, player, game, consequence, callback, uno) {
-        console.log("discarding card " + card.id);
-        // take the card out of the players hand
-        var selectedCard = removeCard(player.hand, card.id);
-        // and put the card on the top of the discard pile
-        game.discard.unshift(card);
-
-        colourBox(card);
-
+    function discardCard(card, player, game, consequence, callback, uno, pickColour) {
         // force it to appear initially at the top of all cards
         $("#" + card.id).css("z-index", 2000);
 
         // empty the message
         message("");
 
-        // if the discarded card is a pick up card then add to the consequence
-        // and reset the consequence
-        if(card.consequence.pickUp > 0){
-            console.log(player.div + " is adding to consequence");
-            consequence.pickUp += selectedCard.consequence.pickUp;
-            message("Pick up " + consequence.pickUp + "!");
-        }
+        // main function to handle colour picker for black cards
+        function cardColour(colour){
+            console.log("discarding card " + card.id);
+            // take the card out of the players hand
+            var selectedCard = removeCard(player.hand, card.id);
+            // and put the card on the top of the discard pile
+            game.discard.unshift(card);
 
-        // if the discarded card is a reverse then change direction
-        // and reset the consequence
-        if(card.consequence.reverse){
-            console.log(player.div + " is changing direction");
-            message("Change direction!");
-            globalClockWise = !globalClockWise;
-            consequence = clone(globalEmptyConsequence);
-        }
+            card.colour = colour;
+            colourBox(colour);
 
-        // if the discarded card is a skip then skip the next player
-        // and reset the consequence
-        if(card.consequence.skip){
-            console.log(player.div + " is skipping the next player");
-            message("Skip a go!");
-            nextPlayerIndex = getNextPlayerIndex(game.players);
-            consequence = clone(globalEmptyConsequence);
-        }
+            // if the discarded card is a pick up card then add to the consequence
+            // and reset the consequence
+            if(card.consequence.pickUp > 0){
+                console.log(player.div + " is adding to consequence");
+                consequence.pickUp += selectedCard.consequence.pickUp;
+                message("Pick up " + consequence.pickUp + "!");
+            }
 
-        // layout the discard pile and the players hand
-        layoutCardStack(game.discard, "#discard", true);
-        layoutCardHand(player, player.hand, false);
+            // if the discarded card is a reverse then change direction
+            // and reset the consequence
+            if(card.consequence.reverse){
+                console.log(player.div + " is changing direction");
+                message("Change direction!");
+                globalClockWise = !globalClockWise;
+                consequence = clone(globalEmptyConsequence);
+            }
 
-        // animate the moves
-        moveCards([card], globalDiscardCardTime, function () {
-            moveCards(game.discard, 0, function () {
-                moveCards(player.hand, globalHandSortTime, function () {
+            // if the discarded card is a skip then skip the next player
+            // and reset the consequence
+            if(card.consequence.skip){
+                console.log(player.div + " is skipping the next player");
+                message("Skip a go!");
+                nextPlayerIndex = getNextPlayerIndex(game.players);
+                consequence = clone(globalEmptyConsequence);
+            }
 
-                    function unoCallback(isUno){
-                        if(isUno){
-                            callback(card, player, game, consequence);
-                        } else {
-                            var pickUp2 = clone(globalEmptyConsequence);
-                            pickUp2.pickUp = 2;
-                            selectCardFromDeck(player, game, pickUp2, function(){
+            // layout the discard pile and the players hand
+            layoutCardStack(game.discard, "#discard", true);
+            layoutCardHand(player, player.hand, false);
+
+            // animate the moves
+            moveCards([card], globalDiscardCardTime, function () {
+                moveCards(game.discard, 0, function () {
+                    moveCards(player.hand, globalHandSortTime, function () {
+
+                        function unoCallback(isUno){
+                            if(isUno){
                                 callback(card, player, game, consequence);
-                            }, returnFalseCallback)
+                            } else {
+                                var pickUp2 = clone(globalEmptyConsequence);
+                                pickUp2.pickUp = 2;
+                                selectCardFromDeck(player, game, pickUp2, function(){
+                                    callback(card, player, game, consequence);
+                                }, returnFalseCallback)
+                            }
                         }
-                    }
 
-                    // check if its the last card
-                    // if so call uno
-                    if(player.hand.length == 1) {
-                        uno(unoCallback);
-                    } else {
-                        callback(card, player, game, consequence);
-                    }
+                        // check if its the last card
+                        // if so call uno
+                        if(player.hand.length == 1) {
+                            uno(unoCallback);
+                        } else {
+                            callback(card, player, game, consequence);
+                        }
+                    })
                 })
-            })
-        });
+            });
+        }
+
+        // black cards
+        if(card.id[0] == "z") {
+            var colour = pickColour(card, player, game, consequence, cardColour);
+        } else {
+            cardColour(card.colour);
+        }
     }
 
     // select a card from the deck into the player's hand
     var globalSelectCardTime = 500;
-    function selectCardFromDeck(player, game, consequence, callback, playCard, uno) {
+    function selectCardFromDeck(player, game, consequence, callback, playCard, uno, pickColour) {
         // if we have a pick up consequence
         // call the select function multiple times and return;
         if(consequence.pickUp > 0){
@@ -978,7 +1073,7 @@
                             layoutCardHand(player);
 
                             if(isPlay){
-                                discardCard(selectedCard, player, game, consequence, callback, uno);
+                                discardCard(selectedCard, player, game, consequence, callback, uno, pickColour);
                             } else {
                                 moveCards(player.hand, globalHandSortTime, function () {
                                     callback(selectedCard, player, game, clone(globalEmptyConsequence));
@@ -1061,7 +1156,7 @@
         // turn it face up
         card.faceup = true;
         game.discard.push(card);
-        colourBox(card);
+        colourBox(card.colour);
 
         // layout the card in the discard pile
         layoutCardStack(game.discard, "#discard", true);
@@ -1078,6 +1173,7 @@
 
                     // start the game
                     // set the player index to the end of the players list so that it starts at the first player next
+                    $("#card-colour").show();
                     nextTurn(player, game, clone(globalEmptyConsequence))
                 })
             })
@@ -1116,65 +1212,83 @@
             smallCardHeight = 78;
         }
 
-        var headerOffset = 75;
-        var topOffSet = headerOffset + 150;
-
         var tableHorizontalMiddle = width / 2;
         var tableVerticalMiddle = maxTableHeight / 2;
 
+        var runningTop = smallCardHeight;
+
         $("#top-player").css("left", tableHorizontalMiddle + "px");
-        $("#top-player").css("top", headerOffset + "px");
+        $("#top-player").css("top", runningTop + "px");
 
-        $("#bottom-player").css("left", tableHorizontalMiddle + "px");
-        $("#bottom-player").css("top", maxTableHeight - cardHeight + "px");
+        runningTop += (smallCardHeight / 2 + 10);
 
-        $("#left-player").css("left", (tableHorizontalMiddle - maxTableWidth / 2) + smallCardWidth + "px");
-        $("#left-player").css("top", topOffSet + "px");
+        $("#card-colour").css("left", tableHorizontalMiddle + cardWidth / 2 + "px");
+        $("#card-colour").css("top", runningTop + "px");
 
-        $("#right-player").css("left", (tableHorizontalMiddle + maxTableWidth / 2) - smallCardWidth + "px");
-        $("#right-player").css("top", topOffSet + "px");
+        runningTop += 35;
 
         $("#deck").css("left", tableHorizontalMiddle - cardWidth - 10 + "px");
-        $("#deck").css("top", topOffSet - 50 + "px");
+        $("#deck").css("top", runningTop + "px");
 
         $("#discard").css("left", tableHorizontalMiddle + 10 + "px");
-        $("#discard").css("top", topOffSet - 50 + "px");
+        $("#discard").css("top", runningTop + "px");
 
-        $("#hint-button").css("left", tableHorizontalMiddle - 110 + "px");
-        $("#hint-button").css("top", maxTableHeight - cardHeight / 3 + "px");
-
-        $("#sort-button").css("left", tableHorizontalMiddle - 25 + "px");
-        $("#sort-button").css("top", maxTableHeight - cardHeight / 3 + "px");
-
-        $("#uno-button").css("left", tableHorizontalMiddle + 60 + "px");
-        $("#uno-button").css("top", maxTableHeight - cardHeight / 3 + "px");
-
-        var messageWidth = Math.min(maxTableWidth, 300);
-        var messageTop = maxTableHeight - 2 * cardHeight - 45;
-        var messageLeft = tableHorizontalMiddle - messageWidth / 2;
-        $("#message-box").css("width", messageWidth + "px");
-        $("#message-box").css("left", messageLeft + "px");
-        $("#message-box").css("top", messageTop + "px");
+        var buttonHeight = parseInt($("#deal-button").css("height"), 10);
+        runningTop += (buttonHeight / 2);
 
         $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
-        $("#deal-button").css("top", topOffSet - 60 + cardHeight / 2 + "px");
+        $("#deal-button").css("top", runningTop + "px");
+
+        runningTop += smallCardHeight / 2;
+
+        $("#left-player").css("left", (tableHorizontalMiddle - maxTableWidth / 2) + smallCardWidth + "px");
+        $("#left-player").css("top", runningTop + "px");
+
+        $("#right-player").css("left", (tableHorizontalMiddle + maxTableWidth / 2) - smallCardWidth + "px");
+        $("#right-player").css("top", runningTop + "px");
+
+        runningTop += cardHeight / 2 + 20;
 
         $("#reset-button").css("left", tableHorizontalMiddle - 50 + "px");
-        $("#reset-button").css("top", topOffSet - 30 + cardHeight + "px");
+        $("#reset-button").css("top", runningTop + "px");
 
-        var boxTop = messageTop - 35;
+        runningTop += 20;
+
+        var boxTop = runningTop;
         var boxLeft = tableHorizontalMiddle - 10;
-        $("#red-box").css("left", boxLeft - cardWidth + "px");
+        $("#red-box").css("left", boxLeft - cardWidth + 5 + "px");
         $("#red-box").css("top", boxTop + "px");
         $("#green-box").css("left", boxLeft - cardWidth / 2 + 10 + "px");
         $("#green-box").css("top", boxTop + "px");
         $("#blue-box").css("left", boxLeft + cardWidth / 2 - 10 + "px");
         $("#blue-box").css("top", boxTop + "px");
-        $("#yellow-box").css("left", boxLeft + cardWidth + "px");
+        $("#yellow-box").css("left", boxLeft + cardWidth - 5 + "px");
         $("#yellow-box").css("top", boxTop + "px");
 
-        $("#card-colour").css("left", tableHorizontalMiddle + cardWidth / 2 + "px");
-        $("#card-colour").css("top", topOffSet - 85 + "px");
+        runningTop += 30;
+
+        var messageWidth = Math.min(maxTableWidth, 300);
+        var messageTop = runningTop;
+        var messageLeft = tableHorizontalMiddle - messageWidth / 2;
+        $("#message-box").css("width", messageWidth + "px");
+        $("#message-box").css("left", messageLeft + "px");
+        $("#message-box").css("top", messageTop + "px");
+
+        runningTop += 120;
+
+        $("#bottom-player").css("left", tableHorizontalMiddle + "px");
+        $("#bottom-player").css("top", runningTop + "px");
+
+        runningTop += cardHeight / 2 + 10;
+
+        $("#hint-button").css("left", tableHorizontalMiddle - 110 + "px");
+        $("#hint-button").css("top", runningTop + "px");
+
+        $("#sort-button").css("left", tableHorizontalMiddle - 25 + "px");
+        $("#sort-button").css("top", runningTop + "px");
+
+        $("#uno-button").css("left", tableHorizontalMiddle + 60 + "px");
+        $("#uno-button").css("top", runningTop + "px");
 
         globalBetweenMovesTime = 500;
         globalDiscardCardTime = 500;
@@ -1184,7 +1298,7 @@
         globalDealOutNumber = 7;
         globalDeckFaceUp = false;
         playersFaceUp = false;
-        playersOffset = 15;
+        playersOffset = 10;
 
         // create the players array and creat some players
         var players = [];
@@ -1261,6 +1375,8 @@
 
         // set up the game object
         var game = {players: players, deck: deck, discard: []};
+
+        //dealOutCards(game);
 
         // setup the function so that when the player clicks the deal-button it deals out the cards
         $("#deal-button").click(function () {
