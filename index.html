@@ -64,6 +64,10 @@
         display: none;
         text-align: center;
         z-index: -100;
+        max-height: 50px;
+        min-height: 50px;
+        height: 50px;
+        margin: 0px;
     }
 
     img {
@@ -79,6 +83,7 @@
         color: White;
         font-size: 25px;
         margin-top: 10px;
+        margin-bottom: 0px;
         margin-left: 10px;
     }
 
@@ -111,7 +116,6 @@
         height: 25px;
         margin: 0px;
         border: 1px solid darkslategrey;
-        /*display: none;*/
     }
 
     .blue {
@@ -139,17 +143,15 @@
 <!--<hr id="hr" class="hl">-->
 <!--<div class="vl"></div>-->
 <!--<button id="uno-button" style="width:50px" class="btn btn-danger  btn-sm button">Uno</button>-->
+<div id="container" class="container">
 
-<div>
-    <h1>UNO<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
-</div>
+    <h1 id="uno-heading">UNO<a href="https://www.unorules.com" id="help-link">Official Rules</a></h1>
 
-<div id="cards"></div>
-<div class="container">
+    <div id="cards"></div>
 
-    <div id="card-colour" class="box" style="display:none"></div>
+    <div id="card-colour" class="box" style="display: none"></div>
 
-    <div id="colour-choice" style="display:none">
+    <div id="colour-choice" style="display: none">
         <div id="red-box" class="red box"></div>
         <div id="green-box" class="green box"></div>
         <div id="blue-box" class="blue box"></div>
@@ -166,11 +168,11 @@
 
     <button id="deal-button"  class="btn btn-danger btn-lg button">Deal</button>
     <button id="reset-button"  class="btn btn-danger btn-lg button">Restart</button>
-    <button id="sort-button" style="width:50px" class="btn btn-info btn-sm button">Sort</button>
-    <button id="hint-button" style="width:50px" class="btn btn-warning btn-sm button">Hint</button>
-    <input type="image" id="uno-button" src="images/UNO-button.png" class="btn btn-default btn-sm button">
+    <button id="sort-button" style="width:50px" class="btn btn-info button">Sort</button>
+    <button id="hint-button" style="width:50px" class="btn btn-warning button">Hint</button>
+    <input type="image" id="uno-button" src="images/UNO-button.png" class="btn btn-default button">
 
-    <div id="message-box" style="min-height:50px" class="alert alert-warning message">&nbsp;</div>
+    <div id="message-box" style="min-height:50px" style="display: none" class="alert alert-warning message">&nbsp;</div>
 </div>
 
 <script>
@@ -237,6 +239,8 @@
             left: 0,
             top: 0,
             zindex: 0,
+            rotate: 0,
+            currentRotate: 0,
             front: idToImage(id),
             back: "images/back.png",
             faceup: false,
@@ -378,11 +382,32 @@
         var card = item.card;
         var css = item.css;
 
+        var rotate = card.rotate;
+        // if(card.rotate == card.currentRotate){
+        //     rotate = card.rotate;
+        // } else if(card.rotate == 90 && card.currentRotate == 0){
+        //     rotate = 3 * 90;
+        // } else if(card.rotate == 0 && card.currentRotate == 90){
+        //     rotate = 3 * 90;
+        // }
+        //
+        // card.currentRotate = card.rotate;
+
         // turn the card around before animation
         var src = card.faceup ? card.front : card.back;
         if ($("#" + card.id).attr("src") != src) {
             $("#" + card.id).attr('src', src);
         }
+
+        $el.animate(
+            { deg: rotate },
+            {
+                duration: delay/2,
+                step: function(now) {
+                    $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                }
+            }
+        );
 
         $el.animate(css, delay, function () {
             showCard(card);
@@ -436,7 +461,7 @@
     }
 
     // layout cards in a single stack of cards - face up or down
-    function layoutCardStack(cards, name, faceup) {
+    function layoutStack(cards, name, faceup) {
         var div = $(name);
         var position = div.position();
         var offset = 0;
@@ -448,6 +473,7 @@
             card.zindex = zindex;
             card.faceup = faceup;
             card.width = 70;
+            card.rotate = 0;
             zindex--;
             offset -= 2;
             offset = Math.max(-10, offset);
@@ -455,7 +481,7 @@
     }
     // layout cards in a hand of cards
     var globalHighlightOffset = 20;
-    function layoutCardHand(player) {
+    function layoutHand(player) {
         var div = $("#" + player.div);
         var position = div.position();
 
@@ -467,7 +493,7 @@
         count--; // zero based
 
         var adjleft = player.offsetLeft * count / 2 + player.width / 2;
-        var adjtop = player.offsetTop * count / 2 + player.height / 2;
+        var adjtop = player.offsetTop * count / 2;// + player.height / 2;
 
         if (player.sort) {
             sortCards(player.hand);
@@ -483,6 +509,7 @@
             card.zindex = zindex;
             card.faceup = player.faceup;
             card.width = player.width;
+            card.rotate = player.rotate;
 
             // add depth
             zindex++;
@@ -746,7 +773,7 @@
             $("#colour-choice").hide();
             $(".card").unbind("click");
 
-            layoutCardHand(player);
+            layoutHand(player);
             moveCards(player.hand, globalHandSortTime, function () {
                 setUpClickHandlers(game, consequence);
             });
@@ -858,7 +885,7 @@
         message("Here are all the valid cards.");
 
         // layout the cards with the highlight hints
-        layoutCardHand(player);
+        layoutHand(player);
         // move them instantly
         moveCards(cards, 50, function () {
             // set a timeout of 2 seconds and reset the highlight
@@ -867,7 +894,7 @@
                 cards.forEach(function(card){
                     card.highlight = false;
                 });
-                layoutCardHand(player);
+                layoutHand(player);
                 moveCards(cards, 50, function (){});
             }, globalHintHighlightTime)
         });
@@ -975,8 +1002,8 @@
             }
 
             // layout the discard pile and the players hand
-            layoutCardStack(game.discard, "#discard", true);
-            layoutCardHand(player, player.hand, false);
+            layoutStack(game.discard, "#discard", true);
+            layoutHand(player, player.hand, false);
 
             // animate the moves
             moveCards([card], globalDiscardCardTime, function () {
@@ -1054,9 +1081,9 @@
         }
 
         // layout the discard pile (from a reset), the players hand and the deck
-        layoutCardStack(game.discard, "#discard", true);
-        layoutCardStack(game.deck, "#deck", globalDeckFaceUp);
-        layoutCardHand(player);
+        layoutStack(game.discard, "#discard", true);
+        layoutStack(game.deck, "#deck", globalDeckFaceUp);
+        layoutHand(player);
 
         // if the selected card can be played then make it highlighted
         if(isValidMove(selectedCard, game.discard[0], consequence)) {
@@ -1070,7 +1097,7 @@
                     moveCards(player.hand, globalHandSortTime, function () {
 
                         function playCardCallback(isPlay){
-                            layoutCardHand(player);
+                            layoutHand(player);
 
                             if(isPlay){
                                 discardCard(selectedCard, player, game, consequence, callback, uno, pickColour);
@@ -1148,7 +1175,7 @@
 
         // ask all of the players to layout their hands on the table
         game.players.forEach(function (player) {
-            layoutCardHand(player);
+            layoutHand(player);
         });
 
         // create a discard pile with the top card
@@ -1159,10 +1186,10 @@
         colourBox(card.colour);
 
         // layout the card in the discard pile
-        layoutCardStack(game.discard, "#discard", true);
+        layoutStack(game.discard, "#discard", true);
 
         // layout the cards in the deck
-        layoutCardStack(game.deck, "#deck", globalDeckFaceUp);
+        layoutStack(game.deck, "#deck", globalDeckFaceUp);
 
         // animate the cards into place
         moveCards(cards, globalDealCardsTime, function () {
@@ -1202,7 +1229,7 @@
         var maxTableHeight = Math.min(minTable, height);
 
         var cardWidth = 70;
-        var cardHeight = 105;
+        var cardHeight = 109;
 
         var smallCardWidth = cardWidth;
         var smallCardHeight = cardHeight;
@@ -1215,17 +1242,29 @@
         var tableHorizontalMiddle = width / 2;
         var tableVerticalMiddle = maxTableHeight / 2;
 
-        var runningTop = smallCardHeight;
+        // set the container with to the width of the table
+        // this will align the heading in the table nicely
+        $("#container").css("width", maxTableWidth);
+
+        // set a spacing for all objects vertically
+        var spacer = 10;
+        // set a running top to just after the heading
+        var runningTop = $("#uno-heading").outerHeight(true) + spacer;
+
+        // work out the height of each object
+        var buttonHeight = $("#deal-button").outerHeight(true);
+        var boxHeight = $("#card-colour").outerHeight(true);
+        var messageHeight = $("#message-box").outerHeight(true);
 
         $("#top-player").css("left", tableHorizontalMiddle + "px");
         $("#top-player").css("top", runningTop + "px");
 
-        runningTop += (smallCardHeight / 2 + 10);
+        runningTop += smallCardHeight + spacer;
 
         $("#card-colour").css("left", tableHorizontalMiddle + cardWidth / 2 + "px");
         $("#card-colour").css("top", runningTop + "px");
 
-        runningTop += 35;
+        runningTop += boxHeight + spacer;
 
         $("#deck").css("left", tableHorizontalMiddle - cardWidth - 10 + "px");
         $("#deck").css("top", runningTop + "px");
@@ -1233,53 +1272,49 @@
         $("#discard").css("left", tableHorizontalMiddle + 10 + "px");
         $("#discard").css("top", runningTop + "px");
 
-        var buttonHeight = parseInt($("#deal-button").css("height"), 10);
-        runningTop += (buttonHeight / 2);
-
-        $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
-        $("#deal-button").css("top", runningTop + "px");
-
-        runningTop += smallCardHeight / 2;
-
         $("#left-player").css("left", (tableHorizontalMiddle - maxTableWidth / 2) + smallCardWidth + "px");
         $("#left-player").css("top", runningTop + "px");
 
         $("#right-player").css("left", (tableHorizontalMiddle + maxTableWidth / 2) - smallCardWidth + "px");
         $("#right-player").css("top", runningTop + "px");
 
-        runningTop += cardHeight / 2 + 20;
+        runningTop += cardHeight / 2;
+
+        $("#deal-button").css("left", tableHorizontalMiddle + 10 + "px");
+        $("#deal-button").css("top", runningTop + "px");
+
+        runningTop += cardHeight - cardHeight / 2 + spacer * 2;
 
         $("#reset-button").css("left", tableHorizontalMiddle - 50 + "px");
         $("#reset-button").css("top", runningTop + "px");
 
-        runningTop += 20;
+        runningTop += spacer;
 
-        var boxTop = runningTop;
         var boxLeft = tableHorizontalMiddle - 10;
         $("#red-box").css("left", boxLeft - cardWidth + 5 + "px");
-        $("#red-box").css("top", boxTop + "px");
+        $("#red-box").css("top", runningTop + "px");
         $("#green-box").css("left", boxLeft - cardWidth / 2 + 10 + "px");
-        $("#green-box").css("top", boxTop + "px");
+        $("#green-box").css("top", runningTop + "px");
         $("#blue-box").css("left", boxLeft + cardWidth / 2 - 10 + "px");
-        $("#blue-box").css("top", boxTop + "px");
+        $("#blue-box").css("top", runningTop + "px");
         $("#yellow-box").css("left", boxLeft + cardWidth - 5 + "px");
-        $("#yellow-box").css("top", boxTop + "px");
+        $("#yellow-box").css("top", runningTop + "px");
 
-        runningTop += 30;
+        runningTop += buttonHeight;
 
         var messageWidth = Math.min(maxTableWidth, 300);
-        var messageTop = runningTop;
         var messageLeft = tableHorizontalMiddle - messageWidth / 2;
+
         $("#message-box").css("width", messageWidth + "px");
         $("#message-box").css("left", messageLeft + "px");
-        $("#message-box").css("top", messageTop + "px");
+        $("#message-box").css("top", runningTop + "px");
 
-        runningTop += 120;
+        runningTop += messageHeight + spacer * 2;
 
         $("#bottom-player").css("left", tableHorizontalMiddle + "px");
         $("#bottom-player").css("top", runningTop + "px");
 
-        runningTop += cardHeight / 2 + 10;
+        runningTop += cardHeight + spacer;
 
         $("#hint-button").css("left", tableHorizontalMiddle - 110 + "px");
         $("#hint-button").css("top", runningTop + "px");
@@ -1292,7 +1327,7 @@
 
         globalBetweenMovesTime = 500;
         globalDiscardCardTime = 500;
-        globalHandSortTime = 100;
+        globalHandSortTime = 70;
         globalSelectCardTime = 500;
         globalDealCardsTime = 150;
         globalDealOutNumber = 7;
@@ -1309,6 +1344,7 @@
             offsetTop: 0,
             offsetLeft: 25,
             faceup: true,
+            rotate:0,
             width: cardWidth,
             height: cardHeight,
             sort: false,
@@ -1322,6 +1358,7 @@
             offsetTop: playersOffset,
             offsetLeft: 0,
             faceup: playersFaceUp,
+            rotate:90,
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
@@ -1335,6 +1372,7 @@
             offsetTop: 0,
             offsetLeft: playersOffset,
             faceup: playersFaceUp,
+            rotate:0,
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
@@ -1348,6 +1386,7 @@
             offsetTop: playersOffset,
             offsetLeft: 0,
             faceup: playersFaceUp,
+            rotate:-90,
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
@@ -1366,7 +1405,7 @@
         deck = shuffleCards(deck);
         //deck = sortCards(deck);
         // layout the cards into the deck
-        layoutCardStack(deck, "#deck", false);
+        layoutStack(deck, "#deck", false);
         // move them into the deck on the table
         moveCards(deck, 0, function () {});
 
@@ -1392,14 +1431,14 @@
 
             // ask all of the players to layout their hands on the table
             game.players.forEach(function (player) {
-                layoutCardHand(player);
+                layoutHand(player);
             });
 
             // layout the card in the discard pile
-            layoutCardStack(game.discard, "#discard", true);
+            layoutStack(game.discard, "#discard", true);
 
             // layout the cards in the deck
-            layoutCardStack(game.deck, "#deck", globalDeckFaceUp);
+            layoutStack(game.deck, "#deck", globalDeckFaceUp);
 
             // animate the cards into place
                 moveCards(game.discard, globalDealCardsTime, function () {
@@ -1413,7 +1452,7 @@
         $("#sort-button").click(function () {
             var player = findPlayer(players, "bottom-player");
             player.sort = true;
-            layoutCardHand(player);
+            layoutHand(player);
             moveCards(player.hand, globalHandSortTime, function () {
             });
         });
