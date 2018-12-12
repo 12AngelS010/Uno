@@ -728,6 +728,12 @@
 
     function pickColourCallback(card, player, game, consequence, callback){
         $("#colour-choice").show();
+        message("Pick a colour from the boxes");
+
+        card.highlight = true;
+        layoutHand(player);
+        card.zindex = 2000;
+        moveCards([card], 50, function (){});
 
         $(".box").click(function(event){
             $(".box").unbind("click");
@@ -758,6 +764,7 @@
             $(".box").unbind("click");
             $("#colour-choice").hide();
             $(".card").unbind("click");
+            card.highlight = false;
 
             layoutHand(player);
             moveCards(player.hand, globalHandSortTime, function () {
