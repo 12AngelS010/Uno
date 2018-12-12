@@ -836,7 +836,7 @@
 
         // if we pick up a card and can play it allow the human to choose
         function playPickupCard(callback){
-            message("Click card if you want to discard, otherwise click your hand");
+            message("Click card to discard, otherwise click hand");
             function selectDiscard(){
                 $(".card").unbind("click");
                 callback(true);
