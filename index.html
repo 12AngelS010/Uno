@@ -487,11 +487,12 @@
         player.hand.forEach(function (card) {
             card.left = position.left + offsetLeft - adjleft;
             card.top = position.top + offsetTop - adjtop;
+            card.zindex = zindex;
             // if highlighting a card make it stand out
             if(card.highlight){
                 card.top -= globalHighlightOffset;
+                card.zindex = 2000;
             }
-            card.zindex = zindex;
             card.faceup = player.faceup;
             card.width = player.width;
             card.height = player.height;
@@ -727,45 +728,14 @@
     }
 
     function pickColourCallback(card, player, game, consequence, callback){
-        $("#colour-choice").show();
-        message("Pick a colour from the boxes");
-
-        card.highlight = true;
-        layoutHand(player);
-        card.zindex = 2000;
-        moveCards([card], 50, function (){});
-
-        $(".box").click(function(event){
-            $(".box").unbind("click");
-            $("#colour-choice").hide();
-
-            var id = event.currentTarget.id;
-            switch(id){
-                case "red-box":
-                    callback("r");
-                    break;
-                case "green-box":
-                    callback("g");
-                    break;
-                case "blue-box":
-                    callback("b");
-                    break;
-                case "yellow-box":
-                    callback("y");
-                    break;
-                default:
-                    callback("y");
-                    break;
-            }
-        });
 
         // ignore colour pick and put the card back
         function ignore() {
             $(".box").unbind("click");
             $("#colour-choice").hide();
             $(".card").unbind("click");
-            card.highlight = false;
 
+            card.highlight = false;
             layoutHand(player);
             moveCards(player.hand, globalHandSortTime, function () {
                 setUpClickHandlers(game, consequence);
@@ -776,6 +746,36 @@
             $("#" + card.id).click(ignore);
         });
 
+        card.highlight = true;
+        layoutHand(player);
+        moveCards([card], 50, function (){
+            $("#colour-choice").show();
+            message("Pick a colour from the boxes");
+
+            $(".box").click(function(event){
+                $(".box").unbind("click");
+                $("#colour-choice").hide();
+
+                var id = event.currentTarget.id;
+                switch(id){
+                    case "red-box":
+                        callback("r");
+                        break;
+                    case "green-box":
+                        callback("g");
+                        break;
+                    case "blue-box":
+                        callback("b");
+                        break;
+                    case "yellow-box":
+                        callback("y");
+                        break;
+                    default:
+                        callback("y");
+                        break;
+                }
+            });
+        });
     }
 
     function handleHandClickEvent(card, player, game, consequence){
@@ -1076,12 +1076,12 @@
         // layout the discard pile (from a reset), the players hand and the deck
         layoutStack(game.discard, "#discard", true);
         layoutStack(game.deck, "#deck", globalDeckFaceUp);
-        layoutHand(player);
 
         // if the selected card can be played then make it highlighted
         if(isValidMove(selectedCard, game.discard[0], consequence)) {
-            selectedCard.top -= globalHighlightOffset;
+            selectedCard.highlight = true;
         }
+        layoutHand(player);
 
         // animate the moves
         moveCards([selectedCard], globalSelectCardTime, function () {
@@ -1090,6 +1090,7 @@
                     moveCards(player.hand, globalHandSortTime, function () {
 
                         function playCardCallback(isPlay){
+                            selectedCard.highlight = false;
                             layoutHand(player);
 
                             if(isPlay){
