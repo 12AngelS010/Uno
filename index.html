@@ -363,14 +363,11 @@
                 'style="left: ' + card.left + 'px; top:' + card.top + 'px"' +
                 '></image>';
             $(div).append(html);
+            $("#" + card.id).show();
         });
     }
 
     // animation functions
-    function showCard(card) {
-        $("#" + card.id).show();
-        $("#" + card.id).css("z-index", card.zindex);
-    }
     function animate(list, delay, callback) {
         if (list.length == 0) {
             callback();
@@ -383,15 +380,6 @@
         var css = item.css;
 
         var rotate = card.rotate;
-        // if(card.rotate == card.currentRotate){
-        //     rotate = card.rotate;
-        // } else if(card.rotate == 90 && card.currentRotate == 0){
-        //     rotate = 3 * 90;
-        // } else if(card.rotate == 0 && card.currentRotate == 90){
-        //     rotate = 3 * 90;
-        // }
-        //
-        // card.currentRotate = card.rotate;
 
         // turn the card around before animation
         var src = card.faceup ? card.front : card.back;
@@ -399,6 +387,7 @@
             $("#" + card.id).attr('src', src);
         }
 
+        // rotate the card
         $el.animate(
             { deg: rotate },
             {
@@ -409,31 +398,26 @@
             }
         );
 
+        // call JQuery animate and then call the next object in the list
         $el.animate(css, delay, function () {
-            showCard(card);
+            $("#" + card.id).css("z-index", card.zindex);
             animate(list, delay, callback);
         });
     }
     function moveCards(cards, delay, callback) {
         var animations = [];
         cards.forEach(function (card) {
-            var css = {left: card.left + "px", top: card.top + "px", width: card.width, height: "auto"};
-            if (delay == 0) {
-                var src = card.faceup ? card.front : card.back;
-                if ($("#" + card.id).attr("src") != src) {
-                    $("#" + card.id).attr('src', src);
-                }
-                $("#" + card.id).css(css);
-                showCard(card);
-            } else {
+            var current = $("#" + card.id).css(["left", "top", "width", "height", "z-index"]);
+            var css = {left: card.left + "px", top: card.top + "px", width: card.width + "px", height: card.height + "px", "z-index": card.zindex + ""};
+            if(JSON.stringify(current) !== JSON.stringify(css)) {
                 animations.push({element: $("#" + card.id), card: card, css: css});
+            } else {
+                // console.log(JSON.stringify(current));
+                // console.log(JSON.stringify(css));
+                // console.log("------------");
             }
         });
-        if (delay == 0) {
-            callback();
-        } else {
             animate(animations, delay, callback);
-        }
     }
 
     // deal number cards out to each player from the deck
@@ -473,6 +457,7 @@
             card.zindex = zindex;
             card.faceup = faceup;
             card.width = 70;
+            card.height = 109;
             card.rotate = 0;
             zindex--;
             offset -= 2;
@@ -509,6 +494,7 @@
             card.zindex = zindex;
             card.faceup = player.faceup;
             card.width = player.width;
+            card.height = player.height;
             card.rotate = player.rotate;
 
             // add depth
@@ -1327,7 +1313,7 @@
 
         globalBetweenMovesTime = 500;
         globalDiscardCardTime = 500;
-        globalHandSortTime = 70;
+        globalHandSortTime = 50;
         globalSelectCardTime = 500;
         globalDealCardsTime = 150;
         globalDealOutNumber = 7;
