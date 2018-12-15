@@ -1041,11 +1041,15 @@
         // if we have a pick up consequence
         // call the select function multiple times and return;
         if(consequence.pickUp > 0){
+            var count = consequence.pickUp - 1;
             message("Picking up " + consequence.pickUp);
             for(var x = 0; x < consequence.pickUp - 1; x++){
-                selectCardFromDeck(player, game, clone(globalEmptyConsequence), function(){}, returnFalseCallback)
+                selectCardFromDeck(player, game, clone(globalEmptyConsequence), function(selectedCard, player, game, consequence){
+                    if(count == 0){
+                        callback(selectedCard, player, game, consequence);
+                    }
+                }, returnFalseCallback)
             }
-            selectCardFromDeck(player, game, clone(globalEmptyConsequence), callback, returnFalseCallback);
             return;
         }
 
@@ -1366,7 +1370,7 @@
             offsetTop: 0,
             offsetLeft: playersOffset,
             faceup: playersFaceUp,
-            rotate:0,
+            rotate: 180,
             width: smallCardWidth,
             height: smallCardHeight,
             sort: false,
