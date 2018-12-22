@@ -1041,10 +1041,11 @@
         // if we have a pick up consequence
         // call the select function multiple times and return;
         if(consequence.pickUp > 0){
-            var count = consequence.pickUp - 1;
+            var count = consequence.pickUp;
             message("Picking up " + consequence.pickUp);
-            for(var x = 0; x < consequence.pickUp - 1; x++){
+            for(var x = 0; x < consequence.pickUp; x++){
                 selectCardFromDeck(player, game, clone(globalEmptyConsequence), function(selectedCard, player, game, consequence){
+                    count--;
                     if(count == 0){
                         callback(selectedCard, player, game, consequence);
                     }
